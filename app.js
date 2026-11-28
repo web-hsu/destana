@@ -347,11 +347,11 @@ function tabelHujanHariIni() {
       const d = x.d;
       if (!d) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Data belum tersedia</td></tr>';
       if (!d.n) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>';
-      return '<tr><td>' + esc(x.k) + '</td><td>' + (d.sedang ? '<span class="sdg">● Sedang hujan</span>' : '<span class="brh">Berhenti</span>') + '</td><td><b>' + fx(d.kini, 1) + '</b>' + SATUAN_JAM + ' <span class="kat k' + KAT_KELAS_JAM(d.kini) + '">' + KATEGORI_JAM(d.kini) + '</span></td></tr>';
+      return '<tr><td>' + esc(x.k) + '</td><td>' + (d.sedang ? '<span class="sdg" title="sedang hujan">●</span> ' : "") + '<span class="kat k' + KAT_KELAS_JAM(d.kini) + '">' + KATEGORI_JAM(d.kini) + '</span></td><td><b>' + fx(d.kini, 1) + '</b>' + SATUAN_JAM + '</td></tr>';
     }).join("");
   }
   return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Status hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
-    '<div class="hj-cat"><span class="sdg">●</span> = sedang hujan. Curah hujan = intensitas jam ini (mm/jam), kategori per jam mengacu BMKG. Data 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan ≥ 0,1 mm. Estimasi model; klik kecamatan untuk rincian.</div>';
+    '<div class="hj-cat"><span class="sdg">●</span> = sedang hujan. Status = kategori intensitas jam ini, curah hujan dalam mm/jam (kategori per jam mengacu BMKG). Data 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan ≥ 0,1 mm. Estimasi model; klik kecamatan untuk rincian.</div>';
 }
 
 // ----- kartu di atas peta -----
