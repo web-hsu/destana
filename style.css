@@ -290,11 +290,13 @@ svg.gf text{font-family:var(--font)}
 }
 
 /* ================= GAMBAR JPG (2 halaman potret) =================
-   Halaman 1: sama dengan tampilan web di komputer (lebar 1180).
+   Halaman 1: sama dengan tampilan web di komputer (lebar 1280).
    Halaman 2: papan tingkat siaga, Kondisi per Kecamatan, dan keterangan sumber (lebar sama dengan halaman 1, tinggi mengikuti isi).
    Aktif hanya saat tombol Download JPG ditekan. Selektor body.ekspor sengaja
    lebih kuat daripada aturan responsif, sehingga hasil di HP dan komputer sama. */
 body.ekspor{overflow:hidden}
+body.ekspor .kop,body.ekspor .halaman,body.ekspor .kaki-isi{max-width:1280px;width:100%;margin-left:auto;margin-right:auto}
+body.ekspor .halaman,body.ekspor .kop,body.ekspor .kaki{min-width:0}
 body.ekspor .bar-aksi,body.ekspor .aksi-kecil,body.ekspor .peta-kartu .petunjuk,body.ekspor .leaflet-control-zoom,
 body.ekspor .banner,body.ekspor .kpi-isi .nm{display:none}
 body.ekspor.hal1 .halaman > section.kartu:not(.peta-kartu),body.ekspor.hal1 .kpi{display:none}
@@ -302,7 +304,7 @@ body.ekspor.hal2 .indikator,body.ekspor.hal2 .peta-kartu,body.ekspor.hal2 .dua-k
 body.ekspor .kaki{margin-top:0}
 
 /* ---------- halaman 1: tata letak web (membatalkan aturan layar kecil) ---------- */
-body.ekspor.hal1{width:1180px}
+body.ekspor.hal1{width:1280px;min-width:1280px;max-width:1280px}
 body.ekspor.hal1 .kop{grid-template-columns:1fr minmax(0,2fr) 1fr;text-align:initial}
 body.ekspor.hal1 .logo-grup{justify-content:flex-start;min-height:56px;display:flex}
 body.ekspor.hal1 .logo-grup.kanan{justify-content:flex-end}
@@ -321,7 +323,7 @@ body.ekspor.hal1 .kaki-isi{grid-template-columns:1.1fr 1.1fr 1.4fr auto}
 body.ekspor.hal1 .kaki-buka{text-align:right}
 
 /* ---------- halaman 2: papan tingkat siaga + tabel + sumber (lebar sama dengan halaman 1) ---------- */
-body.ekspor.hal2{width:1180px;font-size:14px}
+body.ekspor.hal2{width:1280px;min-width:1280px;max-width:1280px;font-size:14px}
 body.ekspor.hal2 .kop{grid-template-columns:1fr minmax(0,2fr) 1fr;text-align:initial}
 body.ekspor.hal2 .logo-grup{justify-content:flex-start;min-height:56px;display:flex}
 body.ekspor.hal2 .logo-grup.kanan{justify-content:flex-end}

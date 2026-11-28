@@ -15,7 +15,8 @@ const IKON_TETES = '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.2 6 7.4 6 10
 
 let kecAktif = null;      // kecamatan yang dipilih (null = ringkasan kabupaten)
 let EKSPOR = false;       // true saat membuat gambar JPG (tata letak khusus 2 halaman)
-const HAL = [{ l: 1180 }, { l: 1180 }];   // lebar gambar 1 dan 2 sama (samakan dengan style.css); tinggi mengikuti isi masing-masing
+const SKALA_JPG = 2;
+const HAL = [{ l: 1280 }, { l: 1280 }];   // lebar gambar 1 dan 2 sama (samakan dengan style.css); tinggi mengikuti isi masing-masing
 
 function toast(teks, jenis) {
   const el = $("toast"); el.textContent = teks;
@@ -549,10 +550,22 @@ async function tungguPeta(maksMs) {
 function fotoHalaman(ukuran) {
   const tinggi = ukuran.t || Math.ceil(document.body.getBoundingClientRect().height);
   return html2canvas(document.body, {
-    scale: 2, width: ukuran.l, height: tinggi, windowWidth: 1280, windowHeight: tinggi,
-    useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0,
+    scale: SKALA_JPG, width: ukuran.l, height: tinggi, windowWidth: ukuran.l, windowHeight: tinggi,
+    useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0, x: 0, y: 0,
     onclone: doc => doc.querySelectorAll(".bar-aksi,.leaflet-control-zoom,#toast,#modal").forEach(e => { e.style.display = "none"; })
-  }).then(cv => new Promise((ok, gagal) => cv.toBlob(b => b ? ok(b) : gagal(new Error("gambar kosong")), "image/jpeg", 0.92)));
+  }).then(cv => {
+    // paksa lebar kanvas persis sama untuk semua halaman (cegah selisih akibat isi yang melebar)
+    const LW = ukuran.l * SKALA_JPG;
+    let hasil = cv;
+    if (cv.width !== LW) {
+      hasil = document.createElement("canvas");
+      hasil.width = LW; hasil.height = cv.height;
+      const g = hasil.getContext("2d");
+      g.fillStyle = "#eef2f1"; g.fillRect(0, 0, LW, cv.height);
+      g.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, LW, cv.height);
+    }
+    return new Promise((ok, gagal) => hasil.toBlob(b => b ? ok(b) : gagal(new Error("gambar kosong")), "image/jpeg", 0.92));
+  });
 }
 function simpanBerkas(blob, nama) {
   const a = document.createElement("a");
