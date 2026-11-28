@@ -114,7 +114,7 @@ function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setSt
 
 function opsiPandang() {
   const w = map.getSize().x, pad = w > 1000 ? 12 : 12;
-  return { paddingTopLeft: [w > 1000 ? 420 : 12, 14], paddingBottomRight: [w > 1000 ? 185 : 12, w > 1000 ? 215 : 14], maxZoom: 13, animate: false };
+  return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 13, animate: false };
 }
 function paskanPeta(animasi) {
   map.invalidateSize({ pan: false });
@@ -190,34 +190,41 @@ function renderIndikator() {
     kartu("Tinggi muka air", tma ? fx(tma.v, 0) : "—", tma ? "cm" : "", tma ? "tertinggi · " + esc(tma.k) : (SNAP ? "belum diinput (opsional)" : "menunggu data"));
 }
 
-// ----- prakiraan hujan BMKG per kecamatan -----
-const BOBOT_HUJAN = d => /petir/i.test(d) ? 4 : /lebat/i.test(d) ? 3 : /sedang/i.test(d) ? 2 : 1;
-function labelHari(w) {
-  const t = w.slice(0, 10);
-  return t === tglWITA(0) ? "Hari ini" : t === tglWITA(1) ? "Besok" : tglPendek(t);
+// ----- hujan hari ini (sudah dan sedang terjadi) per kecamatan -----
+function hujanHariIni(c) {
+  const h = c && c.hujan; if (!h || !h.jam || !h.jamMulai) return null;
+  const t0 = new Date(h.jamMulai + ":00Z").getTime(), hari = tglWITA(0), iIni = Math.min(23, h.jam.length - 1);
+  let tot = 0; const list = [];
+  for (let i = 0; i <= iIni; i++) {
+    const iso = new Date(t0 + i * 36e5).toISOString();
+    if (iso.slice(0, 10) !== hari) continue;
+    const mm = h.jam[i] || 0; tot += mm;
+    if (mm >= 0.1) list.push({ j: iso.slice(11, 13) + ".00", mm: mm });
+  }
+  return { tot: tot, n: list.length, awal: list.length ? list[0].j : null, sedang: (h.jam[iIni] || 0) >= 0.1, list: list };
 }
-function tabelHujanBMKG() {
+const KATEGORI_HARIAN = mm => mm < 0.1 ? "Tidak hujan" : mm < 5 ? "Sangat ringan" : mm < 20 ? "Ringan" : mm < 50 ? "Sedang" : mm < 100 ? "Lebat" : mm < 150 ? "Sangat lebat" : "Ekstrem";
+function tabelHujanHariIni() {
   if (!SNAP) return '<span style="color:#5d6f78">' + esc(pesanData()) + '</span>';
-  const ks = kecAktif ? [kecAktif] : adaKec().slice();
-  if (!ks.some(k => C(k).cuaca && C(k).cuaca.hj)) return '<span style="color:#5d6f78">Jam prakiraan hujan belum tersedia. Perbarui Kode.gs ke versi terbaru lalu deploy versi baru.</span>';
-  const baris = ks.map(k => {
-    const hj = (C(k).cuaca && C(k).cuaca.hj) || [];
-    return { k: k, hj: hj, awal: hj.length ? hj[0].w : "9999" };
-  }).sort((a, b) => a.awal < b.awal ? -1 : a.awal > b.awal ? 1 : a.k.localeCompare(b.k));
-  const jam = w => w.slice(11, 16).replace(":", ".");
-  const isi = baris.map(b => {
-    if (!b.hj.length) return '<tr class="nol"><td>' + esc(b.k) + '</td><td colspan="2">Tidak ada hujan diprakirakan</td></tr>';
-    if (kecAktif) return b.hj.map((x, i) => '<tr><td>' + (i ? "" : esc(b.k)) + '</td><td>' + labelHari(x.w) + " " + jam(x.w) + '</td><td>' + esc(x.c) + '</td></tr>').join("");
-    const hari = {}; b.hj.forEach(x => (hari[labelHari(x.w)] = hari[labelHari(x.w)] || []).push(jam(x.w)));
-    const nh = Object.keys(hari);
-    const jamTeks = nh.map(h => (nh.length > 1 || h !== "Hari ini" ? "<b>" + esc(h) + "</b> " : "") + hari[h].join(", ")).join(" · ");
-    const jenis = []; b.hj.forEach(x => { if (jenis.indexOf(x.c) < 0) jenis.push(x.c); });
-    jenis.sort((p, q) => BOBOT_HUJAN(q) - BOBOT_HUJAN(p));
-    const jenisTeks = jenis.map((x, n) => esc(n ? x.replace(/^Hujan\s*/i, "") : x)).join(", ");
-    return '<tr><td>' + esc(b.k) + '</td><td>' + jamTeks + '</td><td>' + jenisTeks + '</td></tr>';
-  }).join("");
-  return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>Jam prakiraan hujan</th><th>Jenis hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
-    '<div class="hj-cat">Jam WITA, interval 3 jam. Klik kecamatan untuk rincian.</div>';
+  const ks = (kecAktif ? [kecAktif] : adaKec().slice()).map(k => ({ k: k, d: hujanHariIni(C(k)) }));
+  if (!ks.some(x => x.d)) return '<span style="color:#5d6f78">Data hujan per jam belum tersedia. Perbarui Kode.gs ke versi terbaru lalu deploy versi baru.</span>';
+  ks.sort((a, b) => ((b.d && b.d.tot) || 0) - ((a.d && a.d.tot) || 0) || a.k.localeCompare(b.k));
+  let isi;
+  if (kecAktif) {
+    const d = ks[0].d;
+    isi = !d || !d.n ? '<tr class="nol"><td>' + esc(kecAktif) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>'
+      : d.list.map((x, i) => '<tr><td>' + (i ? "" : esc(kecAktif)) + '</td><td>' + x.j + '</td><td>' + fx(x.mm, 1) + ' mm</td></tr>').join("") +
+        '<tr class="tot"><td></td><td>Total ' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang hujan</span>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm<small>' + KATEGORI_HARIAN(d.tot) + '</small></td></tr>';
+  } else {
+    isi = ks.map(x => {
+      const d = x.d;
+      if (!d) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Data belum tersedia</td></tr>';
+      if (!d.n) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>';
+      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam<small>sejak ' + d.awal + '</small>' + (d.sedang ? '<small class="sdg">● sedang hujan</small>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm<small>' + KATEGORI_HARIAN(d.tot) + '</small></td></tr>';
+    }).join("");
+  }
+  return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Lama hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
+    '<div class="hj-cat">Pukul 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan = ≥ 0,1 mm/jam. Estimasi model, bukan alat penakar. Klik kecamatan untuk rincian per jam.</div>';
 }
 
 // ----- kartu di atas peta -----
@@ -240,8 +247,8 @@ function renderOverlay() {
   }
   $("ovCuaca").innerHTML = '<div class="ov-judul">Cuaca · ' + (kecAktif ? esc(kecAktif) : "Kabupaten HSU") + '<small>BMKG</small></div>' + cuaca;
 
-  // --- prakiraan hujan per kecamatan (BMKG): kecamatan, jam, jenis hujan ---
-  $("ovRekom").innerHTML = '<div class="ov-judul">Prakiraan Hujan per Kecamatan<small>BMKG · 24 jam ke depan</small></div><div class="ov-isi">' + tabelHujanBMKG() + '</div>';
+  // --- hujan hari ini per kecamatan: lama dan curah hujan ---
+  $("ovRekom").innerHTML = '<div class="ov-judul">Hujan Hari Ini per Kecamatan<small>sudah &amp; sedang terjadi</small></div><div class="ov-isi">' + tabelHujanHariIni() + '</div>';
 }
 
 function renderPetaUpdate() {
