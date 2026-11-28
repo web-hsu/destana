@@ -44,7 +44,7 @@ map.createPane("jalanSungai");                              // di atas warna kec
 map.getPane("jalanSungai").style.zIndex = 450;
 map.getPane("jalanSungai").style.pointerEvents = "none";
 const kanvasDasar = L.canvas({ pane: "jalanSungai" });
-let ubin = null, janjiDasar = null, dataDasar = null;
+let ubin = null, janjiDasar = null, dataDasar = null, galatDasar = "";
 
 const dasarSah = d => !!(d && Array.isArray(d.g) && d.g.length);
 function gambarDasar(d) {
@@ -73,9 +73,9 @@ function ringkasDasar(j) {
 }
 async function unduhDasar() {
   const q = '[out:json][timeout:90];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified)(_link)?$"](' + KOTAK_DASAR + ');' +
-    'way["waterway"~"^(river|stream|canal)$"](' + KOTAK_DASAR + '););out tags geom;';
+    'way["waterway"~"^(river|stream|canal)$"](' + KOTAK_DASAR + '););out geom;';
   for (const url of SERVER_OSM) {
-    const batal = new AbortController(), jam = setTimeout(() => batal.abort(), 60000);
+    const batal = new AbortController(), jam = setTimeout(() => batal.abort(), 100000);
     try {
       const r = await fetch(url, { method: "POST", body: new URLSearchParams({ data: q }), signal: batal.signal });
       if (!r.ok) throw new Error("HTTP " + r.status);
@@ -84,7 +84,10 @@ async function unduhDasar() {
       const d = ringkasDasar(j);
       if (!dasarSah(d)) throw new Error("data kosong");
       return d;
-    } catch (err) { console.warn("Data jalan/sungai gagal dari " + url, err); }
+    } catch (err) {
+      galatDasar = err && err.name === "AbortError" ? "waktu tunggu habis" : String(err && err.message || err).slice(0, 80);
+      console.warn("Data jalan/sungai gagal dari " + url, err);
+    }
     finally { clearTimeout(jam); }
   }
   return null;
@@ -100,8 +103,9 @@ async function muatDasar() {
   }
   if (d) { gambarDasar(d); $("btPeta").hidden = false; return; }
   // cadangan bila data tidak bisa diambil: peta biasa yang dipudarkan
-  ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, crossOrigin: true, opacity: 0.35 }).addTo(map);
+  ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, crossOrigin: true, opacity: 0.8 }).addTo(map);
   toast("Data jalan dan sungai belum bisa diambil. Sementara memakai peta biasa; coba muat ulang beberapa menit lagi.", "err");
+  $("statusPeta").textContent = " · Peta cadangan, data jalan/sungai gagal: " + (galatDasar || "tidak diketahui");
 }
 function simpanBerkasDasar() {
   if (!dataDasar) return;
@@ -112,7 +116,7 @@ function simpanBerkasDasar() {
 const cincin = f => f.geometry.coordinates.map(c => [c[1], c[0]]);
 const fitur = lv => BATAS_HSU_GEOJSON.features.filter(f => f.properties && f.properties.level === lv);
 const poligonKec = {};
-const GAYA_NETRAL = { color: "#27424e", weight: 1.2, opacity: 1, dashArray: "5 4", fillColor: "#b8c4c9", fillOpacity: 0.3 };
+const GAYA_NETRAL = { color: "#27424e", weight: 1.3, opacity: 1, dashArray: "6 4", fill: true, fillColor: "#b8c4c9", fillOpacity: 0 };
 
 const lapKec = L.layerGroup();
 fitur("kecamatan").forEach(f => {
@@ -163,7 +167,7 @@ function aturLabel() {
     const p = map.latLngToContainerPoint([l.lat, l.lon]);
     const f = fitur("kecamatan").find(x => x.properties.name === l.name);
     const tepi = f ? cincin(f).map(t => map.latLngToContainerPoint(t)) : null;
-    return { x: p.x, y: p.y, w: ctx.measureText(l.name).width + 4, h: 30, di: tepi ? (x, y) => dalamWilayah(tepi, x, y) : null };
+    return { x: p.x, y: p.y, w: ctx.measureText(l.name).width + 18, h: 22, di: tepi ? (x, y) => dalamWilayah(tepi, x, y) : null };
   });
   const urut = items.map((_, i) => i).sort((i, j) => items[i].y - items[j].y || items[i].x - items[j].x);
   const off = susunLabel(urut.map(i => items[i]));
@@ -186,15 +190,15 @@ function isiLabel() {
   labelKec.forEach(l => {
     const el = l.marker.getElement(); if (!el || !el.firstChild) return;
     const c = C(l.name);
-    el.firstChild.innerHTML = "<b>" + esc(l.name) + "</b>" + (c ? '<i style="background:' + WARNA_LV[LV[c.skor.status]] + (c.skor.status === "Waspada" ? ";color:#3b3000" : "") + '">' + c.skor.risiko + "</i>" : "");
+    el.firstChild.innerHTML = '<b class="' + (c ? "lv" + LV[c.skor.status] : "") + '">' + esc(l.name) + '</b>';
   });
   aturLabel();
 }
 
+// area kecamatan dibiarkan polos agar jalan dan sungai jelas; warna tingkat siaga hanya di belakang nama
 function gayaKec(n) {
-  const c = C(n), sel = n === kecAktif;
-  const dasar = c ? { color: "#27424e", weight: 1.2, opacity: 1, dashArray: "5 4", fillColor: WARNA_LV[LV[c.skor.status]], fillOpacity: 0.7 } : GAYA_NETRAL;
-  return sel ? Object.assign({}, dasar, { color: "#0a1f2b", weight: 3.5, dashArray: null, fillOpacity: 0.85 }) : dasar;
+  const dasar = { color: "#27424e", weight: 1.3, opacity: 1, dashArray: "6 4", fill: true, fillColor: "#0b4a6f", fillOpacity: 0 };
+  return n === kecAktif ? Object.assign(dasar, { color: "#0a1f2b", weight: 3.5, dashArray: null, fillOpacity: 0.08 }) : dasar;
 }
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
@@ -479,7 +483,7 @@ function renderSumber() {
   $("sumber").innerHTML = '<b>Sumber data dan cara membaca</b>' +
     '<p><b style="display:inline">Sumber:</b> prakiraan cuaca BMKG (semua kecamatan); curah hujan terkini, 24/72 jam terakhir, dan prakiraan dari Open-Meteo; debit sungai GloFAS (model); tinggi muka air (opsional) diinput petugas. Semua data direkam tiap jam di Google Sheet DESTANA sebagai riwayat.</p>' +
     '<p>Aplikasi ini alat bantu pemantauan, bukan pengganti peringatan resmi BPBD, BMKG, dan BWS.</p>';
-  $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "") + " · v33";
+  $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "") + " · v35";
 }
 
 // ================= FORM PETUGAS (modal) =================
