@@ -209,7 +209,7 @@ function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setSt
 
 function opsiPandang() {
   const w = map.getSize().x;
-  return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 14, animate: false };
+  return { paddingTopLeft: [w > 1000 ? 395 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 14, animate: false };
 }
 function paskanPeta(animasi) {
   if (!map.getContainer().offsetWidth) return;   // peta sedang disembunyikan
@@ -322,31 +322,36 @@ function hujanHariIni(c) {
     const mm = h.jam[i] || 0; tot += mm;
     if (mm >= 0.1) list.push({ j: iso.slice(11, 13) + ".00", mm: mm });
   }
-  return { tot: tot, n: list.length, awal: list.length ? list[0].j : null, sedang: (h.jam[iIni] || 0) >= 0.1, list: list };
+  const kini = h.jam[iIni] || 0;   // intensitas jam ini (mm/jam)
+  return { tot: tot, n: list.length, awal: list.length ? list[0].j : null, kini: kini, sedang: kini >= 0.1, list: list };
 }
 const KAT_KELAS = mm => mm < 0.1 ? 0 : mm < 5 ? 1 : mm < 20 ? 2 : mm < 50 ? 3 : 4;
 const KATEGORI_HARIAN = mm => mm < 0.1 ? "Tidak hujan" : mm < 5 ? "Sangat ringan" : mm < 20 ? "Ringan" : mm < 50 ? "Sedang" : mm < 100 ? "Lebat" : mm < 150 ? "Sangat lebat" : "Ekstrem";
+// intensitas per jam (mm/jam), mengacu pada kategori BMKG per jam
+const KAT_KELAS_JAM = v => v < 0.1 ? 0 : v < 1 ? 1 : v < 5 ? 2 : v < 10 ? 3 : 4;
+const KATEGORI_JAM = v => v < 0.1 ? "Tidak hujan" : v < 1 ? "Sangat ringan" : v < 5 ? "Ringan" : v < 10 ? "Sedang" : v < 20 ? "Lebat" : "Sangat lebat";
+const SATUAN_JAM = ' <span class="sat">mm/jam</span>';
 function tabelHujanHariIni() {
   if (!SNAP) return '<span style="color:#5d6f78">' + esc(pesanData()) + '</span>';
   const ks = (kecAktif ? [kecAktif] : adaKec().slice()).map(k => ({ k: k, d: hujanHariIni(C(k)) }));
   if (!ks.some(x => x.d)) return '<span style="color:#5d6f78">Data hujan per jam belum tersedia. Perbarui Kode.gs ke versi terbaru lalu deploy versi baru.</span>';
-  ks.sort((a, b) => ((b.d && b.d.tot) || 0) - ((a.d && a.d.tot) || 0) || a.k.localeCompare(b.k));
+  ks.sort((a, b) => ((b.d && b.d.kini) || 0) - ((a.d && a.d.kini) || 0) || ((b.d && b.d.tot) || 0) - ((a.d && a.d.tot) || 0) || a.k.localeCompare(b.k));
   let isi;
   if (kecAktif) {
     const d = ks[0].d;
     isi = !d || !d.n ? '<tr class="nol"><td>' + esc(kecAktif) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>'
-      : d.list.map((x, i) => '<tr><td>' + (i ? "" : esc(kecAktif)) + '</td><td>' + x.j + '</td><td>' + fx(x.mm, 1) + ' mm</td></tr>').join("") +
-        '<tr class="tot"><td>Total</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">●</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
+      : d.list.map((x, i) => '<tr><td>' + (i ? "" : esc(kecAktif)) + '</td><td>' + x.j + '</td><td><b>' + fx(x.mm, 1) + '</b>' + SATUAN_JAM + '</td></tr>').join("") +
+        '<tr class="tot"><td>Total hari ini</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">●</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
   } else {
     isi = ks.map(x => {
       const d = x.d;
       if (!d) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Data belum tersedia</td></tr>';
       if (!d.n) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>';
-      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg" title="sedang hujan">●</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
+      return '<tr><td>' + esc(x.k) + '</td><td>' + (d.sedang ? '<span class="sdg">● Sedang hujan</span>' : '<span class="brh">Berhenti</span>') + '</td><td><b>' + fx(d.kini, 1) + '</b>' + SATUAN_JAM + ' <span class="kat k' + KAT_KELAS_JAM(d.kini) + '">' + KATEGORI_JAM(d.kini) + '</span></td></tr>';
     }).join("");
   }
-  return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Lama hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
-    '<div class="hj-cat"><span class="sdg">●</span> = sedang hujan. Data 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan ≥ 0,1 mm. Estimasi model; klik kecamatan untuk rincian.</div>';
+  return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Status hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
+    '<div class="hj-cat"><span class="sdg">●</span> = sedang hujan. Curah hujan = intensitas jam ini (mm/jam), kategori per jam mengacu BMKG. Data 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan ≥ 0,1 mm. Estimasi model; klik kecamatan untuk rincian.</div>';
 }
 
 // ----- kartu di atas peta -----
