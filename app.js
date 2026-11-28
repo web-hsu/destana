@@ -31,7 +31,83 @@ const map = L.map("map", { attributionControl: false, zoomControl: false, prefer
 L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
-const ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19, crossOrigin: true }).addTo(map);
+
+// ----- peta dasar: HANYA jalan dan sungai, digambar dari data OpenStreetMap (tanpa gambar peta) -----
+// Urutan sumber data: berkas jalan-sungai.js (bila ada) > simpanan di browser > unduh dari server Overpass.
+const KOTAK_DASAR = "-2.80,114.55,-2.15,115.75";            // selatan, barat, utara, timur
+const SERVER_OSM = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
+const SIMPAN_DASAR = "destanaJalanSungai1";
+// jenis: 0 jalan utama, 1 jalan, 2 sungai, 3 anak sungai/kanal
+const GAYA_DASAR = [{ color: "#5d4037", weight: 2.2, opacity: .95 }, { color: "#8d6e63", weight: 1, opacity: .85 },
+  { color: "#0d5fc0", weight: 2.6, opacity: 1 }, { color: "#2f86d6", weight: 1, opacity: .9 }];
+map.createPane("jalanSungai");                              // di atas warna kecamatan, di bawah nama
+map.getPane("jalanSungai").style.zIndex = 450;
+map.getPane("jalanSungai").style.pointerEvents = "none";
+const kanvasDasar = L.canvas({ pane: "jalanSungai" });
+let ubin = null, janjiDasar = null, dataDasar = null;
+
+const dasarSah = d => !!(d && Array.isArray(d.g) && d.g.length);
+function gambarDasar(d) {
+  [3, 1, 2, 0].forEach(jenis => {
+    const garis = d.g.filter(x => x[0] === jenis).map(x => { const t = []; for (let i = 0; i < x[1].length; i += 2) t.push([x[1][i], x[1][i + 1]]); return t; });
+    if (garis.length) L.polyline(garis, Object.assign({ renderer: kanvasDasar, pane: "jalanSungai", interactive: false }, GAYA_DASAR[jenis])).addTo(map);
+  });
+  dataDasar = d;
+}
+// ringkas jawaban Overpass agar muat disimpan di browser
+function ringkasDasar(j) {
+  const g = [], bulat = v => Math.round(v * 1e5) / 1e5;
+  (j.elements || []).forEach(e => {
+    if (!e.geometry || !e.tags) return;
+    const air = e.tags.waterway, jalan = e.tags.highway;
+    const jenis = air ? (air === "river" ? 2 : 3) : /^(motorway|trunk|primary|secondary)/.test(jalan || "") ? 0 : 1;
+    const t = []; let a = null;
+    e.geometry.forEach((p, i) => {
+      if (!p) return;
+      if (a && i < e.geometry.length - 1 && Math.abs(p.lat - a.lat) < 1.5e-4 && Math.abs(p.lon - a.lon) < 1.5e-4) return;
+      t.push(bulat(p.lat), bulat(p.lon)); a = p;
+    });
+    if (t.length >= 4) g.push([jenis, t]);
+  });
+  return { d: new Date().toISOString().slice(0, 10), g: g };
+}
+async function unduhDasar() {
+  const q = '[out:json][timeout:90];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified)(_link)?$"](' + KOTAK_DASAR + ');' +
+    'way["waterway"~"^(river|stream|canal)$"](' + KOTAK_DASAR + '););out tags geom;';
+  for (const url of SERVER_OSM) {
+    const batal = new AbortController(), jam = setTimeout(() => batal.abort(), 60000);
+    try {
+      const r = await fetch(url, { method: "POST", body: new URLSearchParams({ data: q }), signal: batal.signal });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json();
+      if (/error/i.test(j.remark || "")) throw new Error(j.remark);
+      const d = ringkasDasar(j);
+      if (!dasarSah(d)) throw new Error("data kosong");
+      return d;
+    } catch (err) { console.warn("Data jalan/sungai gagal dari " + url, err); }
+    finally { clearTimeout(jam); }
+  }
+  return null;
+}
+async function muatDasar() {
+  if (typeof JALAN_SUNGAI !== "undefined" && dasarSah(JALAN_SUNGAI)) { gambarDasar(JALAN_SUNGAI); return; }
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(SIMPAN_DASAR)); } catch (_) {}
+  if (!dasarSah(d)) {
+    toast("Memuat peta jalan dan sungai…", "ok");
+    d = await unduhDasar();
+    if (d) try { localStorage.setItem(SIMPAN_DASAR, JSON.stringify(d)); } catch (_) {}
+  }
+  if (d) { gambarDasar(d); $("btPeta").hidden = false; return; }
+  // cadangan bila data tidak bisa diambil: peta biasa yang dipudarkan
+  ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, crossOrigin: true, opacity: 0.35 }).addTo(map);
+  toast("Data jalan dan sungai belum bisa diambil. Sementara memakai peta biasa; coba muat ulang beberapa menit lagi.", "err");
+}
+function simpanBerkasDasar() {
+  if (!dataDasar) return;
+  simpanBerkas(new Blob(["// Jalan dan sungai (c) OpenStreetMap contributors, lisensi ODbL\nconst JALAN_SUNGAI = " + JSON.stringify(dataDasar) + ";\n"], { type: "text/javascript" }), "jalan-sungai.js");
+  toast("jalan-sungai.js tersimpan. Letakkan di folder yang sama dengan index.html.", "ok");
+}
 
 const cincin = f => f.geometry.coordinates.map(c => [c[1], c[0]]);
 const fitur = lv => BATAS_HSU_GEOJSON.features.filter(f => f.properties && f.properties.level === lv);
@@ -57,21 +133,27 @@ function tipKec(n) {
 // label kecamatan (nama + skor), diatur agar tidak saling menimpa
 const labelKec = [];
 function susunLabel(items) {
-  const GAP = 3, terpasang = [], hasil = [];
+  const GAP = 1, terpasang = [], hasil = [], kandidat = [];
+  for (let dy = -60; dy <= 60; dy += 4) for (let dx = -80; dx <= 80; dx += 4) kandidat.push([dx, dy]);
+  kandidat.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
   const tabrak = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + GAP && Math.abs(a.y - b.y) < (a.h + b.h) / 2 + GAP;
   items.forEach(it => {
-    const h = it.h + GAP, kandidat = [[0, 0]];
-    for (let r = 1; r <= 4; r++) [-1, 0, 1].forEach(iy => [-2, -1, 0, 1, 2].forEach(ix => { if (iy || ix) kandidat.push([ix * r * 22, iy * r * h]); }));
-    kandidat.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
-    let pilih = kandidat[0];
-    for (const [dx, dy] of kandidat) {
-      const box = { x: it.x + dx, y: it.y + dy, w: it.w, h: it.h };
-      if (!terpasang.some(t => tabrak(box, t))) { pilih = [dx, dy]; break; }
-    }
+    const bebas = d => !terpasang.some(t => tabrak({ x: it.x + d[0], y: it.y + d[1], w: it.w, h: it.h }, t));
+    // utamakan posisi terdekat yang masih berada di dalam wilayah kecamatannya
+    const pilih = kandidat.find(d => bebas(d) && (!it.di || it.di(it.x + d[0], it.y + d[1]))) || kandidat.find(bebas) || [0, 0];
     terpasang.push({ x: it.x + pilih[0], y: it.y + pilih[1], w: it.w, h: it.h });
     hasil.push({ dx: pilih[0], dy: pilih[1] });
   });
   return hasil;
+}
+// apakah titik layar (x, y) berada di dalam poligon [[lat, lon], ...]
+function dalamWilayah(titik, x, y) {
+  let dalam = false;
+  for (let i = 0, j = titik.length - 1; i < titik.length; j = i++) {
+    const a = titik[i], b = titik[j];
+    if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) dalam = !dalam;
+  }
+  return dalam;
 }
 function aturLabel() {
   if (!labelKec.length) return;
@@ -79,7 +161,9 @@ function aturLabel() {
   ctx.font = "800 12.5px Arial";
   const items = labelKec.map(l => {
     const p = map.latLngToContainerPoint([l.lat, l.lon]);
-    return { x: p.x, y: p.y, w: ctx.measureText(l.name).width + 8, h: 30 };
+    const f = fitur("kecamatan").find(x => x.properties.name === l.name);
+    const tepi = f ? cincin(f).map(t => map.latLngToContainerPoint(t)) : null;
+    return { x: p.x, y: p.y, w: ctx.measureText(l.name).width + 4, h: 30, di: tepi ? (x, y) => dalamWilayah(tepi, x, y) : null };
   });
   const urut = items.map((_, i) => i).sort((i, j) => items[i].y - items[j].y || items[i].x - items[j].x);
   const off = susunLabel(urut.map(i => items[i]));
@@ -91,7 +175,7 @@ function aturLabel() {
 function bangunLabel() {
   LABEL_KECAMATAN_HSU.forEach(item => {
     const marker = L.marker([Number(item.lat), Number(item.lon)], {
-      icon: L.divIcon({ className: "kml-label", html: '<div class="lbl"></div>', iconSize: [1, 1], iconAnchor: [0, 0] }),
+      icon: L.divIcon({ className: "kml-label", html: '<div class="lbl" style="width:max-content"></div>', iconSize: [1, 1], iconAnchor: [0, 0] }),
       interactive: false, keyboard: false, zIndexOffset: 1000
     }).addTo(map);
     labelKec.push({ name: item.name, lat: Number(item.lat), lon: Number(item.lon), marker: marker });
@@ -109,8 +193,8 @@ function isiLabel() {
 
 function gayaKec(n) {
   const c = C(n), sel = n === kecAktif;
-  const dasar = c ? { color: "#27424e", weight: 1.2, opacity: 1, dashArray: "5 4", fillColor: WARNA_LV[LV[c.skor.status]], fillOpacity: 0.55 } : GAYA_NETRAL;
-  return sel ? Object.assign({}, dasar, { color: "#0a1f2b", weight: 3.5, dashArray: null, fillOpacity: 0.7 }) : dasar;
+  const dasar = c ? { color: "#27424e", weight: 1.2, opacity: 1, dashArray: "5 4", fillColor: WARNA_LV[LV[c.skor.status]], fillOpacity: 0.7 } : GAYA_NETRAL;
+  return sel ? Object.assign({}, dasar, { color: "#0a1f2b", weight: 3.5, dashArray: null, fillOpacity: 0.85 }) : dasar;
 }
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
@@ -274,7 +358,7 @@ function renderOverlay() {
 function renderPetaUpdate() {
   warnaiPeta(); isiLabel();
   $("legenda").innerHTML = [3, 2, 1, 0].map(lv => '<div><i style="background:' + WARNA_LV[lv] + '"></i>' + NAMA_LV[lv] + ' (' + ["0–24", "25–49", "50–74", "75–100"][lv] + ')</div>').join("") +
-    '<div><span class="gb"></span>Batas kabupaten</div><div><span class="gd"></span>Batas kecamatan</div>';
+    '<div><span class="gj"></span>Jalan</div><div><span class="gs"></span>Sungai</div><div><span class="gb"></span>Batas kabupaten</div><div><span class="gd"></span>Batas kecamatan</div>';
 }
 
 // ================= TABEL =================
@@ -395,7 +479,7 @@ function renderSumber() {
   $("sumber").innerHTML = '<b>Sumber data dan cara membaca</b>' +
     '<p><b style="display:inline">Sumber:</b> prakiraan cuaca BMKG (semua kecamatan); curah hujan terkini, 24/72 jam terakhir, dan prakiraan dari Open-Meteo; debit sungai GloFAS (model); tinggi muka air (opsional) diinput petugas. Semua data direkam tiap jam di Google Sheet DESTANA sebagai riwayat.</p>' +
     '<p>Aplikasi ini alat bantu pemantauan, bukan pengganti peringatan resmi BPBD, BMKG, dan BWS.</p>';
-  $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(/\./g, ".").replace(",", "");
+  $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "") + " · v33";
 }
 
 // ================= FORM PETUGAS (modal) =================
@@ -457,7 +541,7 @@ const jeda = ms => new Promise(r => setTimeout(r, ms));
 async function tungguPeta(maksMs) {
   await jeda(500);
   const mulai = Date.now();
-  while (ubin.isLoading() && Date.now() - mulai < maksMs) await jeda(150);
+  while (ubin && ubin.isLoading() && Date.now() - mulai < maksMs) await jeda(150);
   await jeda(500);
 }
 function fotoHalaman(ukuran) {
@@ -486,6 +570,7 @@ async function unduhJPG() {
     body.classList.add("ekspor", "hal1");
     render(); window.scrollTo(0, 0);
     paskanPeta(false); aturLabel();
+    await Promise.race([janjiDasar, jeda(20000)]);   // tunggu jalan dan sungai
     await tungguPeta(8000);
     paskanPeta(false); aturLabel();
     await jeda(300);
@@ -510,6 +595,7 @@ async function unduhJPG() {
   }
 }
 $("btJpg").addEventListener("click", unduhJPG);
+$("btPeta").addEventListener("click", simpanBerkasDasar);
 $("btCetak").addEventListener("click", () => window.print());
 window.addEventListener("beforeprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
 window.addEventListener("afterprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
@@ -531,6 +617,7 @@ function init() {
   langkah(render);
   langkah(bangunLabel); langkah(render); langkah(() => paskanPeta(false));
   setTimeout(() => langkah(() => { paskanPeta(false); aturLabel(); }), 300);
+  langkah(() => { janjiDasar = muatDasar().catch(err => console.error(err)); });
   langkah(iniData);
 }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
