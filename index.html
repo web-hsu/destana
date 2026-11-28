@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DESTANA — Desa/Kelurahan Tanggap Bencana, Hulu Sungai Utara</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
@@ -15,7 +15,7 @@
   <div class="judul">
     <h1>DESTANA</h1>
     <p class="sub">Desa/Kelurahan Tanggap Bencana</p>
-    <p class="sub2">Kesiapan Banjir Kabupaten Hulu Sungai Utara</p>
+    <p class="sub2">Analisis Bahaya Banjir Kabupaten Hulu Sungai Utara</p>
     <p class="waktu"><span id="tgl">—</span><span class="pisah">•</span><span id="upd">Update data: memuat…</span></p>
   </div>
   <div class="logo-grup kanan" id="logoKanan"></div>
@@ -25,7 +25,7 @@
 
   <!-- tombol aksi -->
   <div class="bar-aksi">
-    <button type="button" class="btn utama" data-buka="modal">Input Data Petugas</button>
+    <button type="button" class="btn utama" data-buka="modal">Input TMA (opsional)</button>
     <button type="button" class="btn" id="btSegarkan">Segarkan</button>
     <a class="btn" id="btSheet" href="#" target="_blank" rel="noopener" hidden>Spreadsheet</a>
     <button type="button" class="btn" id="btCetak">Cetak / PDF</button>
@@ -81,10 +81,10 @@
   <!-- detail kecamatan -->
   <section class="kartu" id="detail"></section>
 
-  <!-- hujan + debit -->
+  <!-- hujan harian + hujan per jam -->
   <section class="dua-kolom sama">
     <div class="kartu" id="kHujan"></div>
-    <div class="kartu" id="kDebit"></div>
+    <div class="kartu" id="kJam"></div>
   </section>
 
   <!-- sumber & catatan -->
@@ -95,7 +95,7 @@
 <footer class="kaki">
   <div class="kaki-isi">
     <div class="merek"><b>DESTANA</b><span>Desa/Kelurahan Tanggap Bencana</span></div>
-    <div class="kaki-tengah"><b>Kesiapan Banjir</b><span>Kabupaten Hulu Sungai Utara</span></div>
+    <div class="kaki-tengah"><b>Analisis Bahaya Banjir</b><span>Kabupaten Hulu Sungai Utara</span></div>
     <div class="kaki-sumber"><span>Sumber:</span><b>BMKG · Open-Meteo · GloFAS · Petugas pos duga</b></div>
     <div class="kaki-buka">Dibuka: <span id="dibuka">—</span></div>
   </div>
@@ -105,12 +105,8 @@
 <div class="modal" id="modal" hidden>
   <div class="modal-kotak" role="dialog" aria-modal="true" aria-labelledby="modalJudul">
     <div class="modal-kepala">
-      <h2 id="modalJudul">Input Data Petugas</h2>
+      <h2 id="modalJudul">Input TMA (opsional)</h2>
       <button type="button" class="tutup" data-tutup="modal" aria-label="Tutup">×</button>
-    </div>
-    <div class="tab">
-      <button type="button" class="aktif" data-tab="tma">Tinggi Muka Air</button>
-      <button type="button" data-tab="kesiapan">Kesiapan Sumber Daya</button>
     </div>
     <div id="modalIsi"></div>
   </div>
@@ -120,7 +116,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="batas-wilayah.js?v=2"></script>
-<script src="data-modul.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="data-modul.js?v=12"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>

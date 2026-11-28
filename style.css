@@ -119,7 +119,7 @@ button{font-family:inherit}
 .leaflet-div-icon.kml-label{background:transparent;border:0}
 
 /* ================= TABEL ================= */
-.dua-kolom{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px}
+.dua-kolom{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(0,1fr);gap:16px}
 .dua-kolom.sama{grid-template-columns:1fr 1fr}
 .tabel-bungkus{overflow-x:auto}
 table.tb{width:100%;border-collapse:collapse;font-size:13px}
@@ -127,7 +127,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:13px}
 .tb th:first-child,.tb td:first-child{text-align:left}
 .tb th.t{text-align:left}
 .tb td{padding:8px 6px;border-bottom:1px solid var(--garis);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tb td.t{text-align:left;white-space:normal;min-width:84px}
+.tb td.t{text-align:left;white-space:normal;min-width:70px}
 .tb tbody tr{cursor:pointer}
 .tb tbody tr:hover{background:#f3f8f7}
 .tb tbody tr.aktif{background:#e8f2fa;outline:2px solid var(--brand2);outline-offset:-2px}
