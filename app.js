@@ -43,12 +43,14 @@ const GAYA_DASAR = [{ color: "#5d4037", weight: 2.2, opacity: .95 }, { color: "#
 map.createPane("jalanSungai");                              // di atas warna kecamatan, di bawah nama
 map.getPane("jalanSungai").style.zIndex = 450;
 map.getPane("jalanSungai").style.pointerEvents = "none";
+map.createPane("batasWilayah");                            // batas kabupaten/kecamatan di atas sungai
+map.getPane("batasWilayah").style.zIndex = 460;
 const kanvasDasar = L.canvas({ pane: "jalanSungai" });
 let ubin = null, janjiDasar = null, dataDasar = null, galatDasar = "";
 
 const dasarSah = d => !!(d && Array.isArray(d.g) && d.g.length);
 function gambarDasar(d) {
-  [3, 1, 2, 0].forEach(jenis => {
+  [3, 2].forEach(jenis => {   // hanya sungai; jalan (jenis 0 dan 1) tidak digambar
     const garis = d.g.filter(x => x[0] === jenis).map(x => { const t = []; for (let i = 0; i < x[1].length; i += 2) t.push([x[1][i], x[1][i + 1]]); return t; });
     if (garis.length) L.polyline(garis, Object.assign({ renderer: kanvasDasar, pane: "jalanSungai", interactive: false }, GAYA_DASAR[jenis])).addTo(map);
   });
@@ -72,8 +74,7 @@ function ringkasDasar(j) {
   return { d: new Date().toISOString().slice(0, 10), g: g };
 }
 async function unduhDasar() {
-  const q = '[out:json][timeout:90];(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified)(_link)?$"](' + KOTAK_DASAR + ');' +
-    'way["waterway"~"^(river|stream|canal)$"](' + KOTAK_DASAR + '););out geom;';
+  const q = '[out:json][timeout:90];(way["waterway"~"^(river|stream|canal)$"](' + KOTAK_DASAR + '););out geom;';
   for (const url of SERVER_OSM) {
     const batal = new AbortController(), jam = setTimeout(() => batal.abort(), 100000);
     try {
@@ -116,7 +117,10 @@ function simpanBerkasDasar() {
 const cincin = f => f.geometry.coordinates.map(c => [c[1], c[0]]);
 const fitur = lv => BATAS_HSU_GEOJSON.features.filter(f => f.properties && f.properties.level === lv);
 const poligonKec = {};
-const GAYA_NETRAL = { color: "#27424e", weight: 1.3, opacity: 1, dashArray: "6 4", fill: true, fillColor: "#b8c4c9", fillOpacity: 0 };
+const WARNA_KEC = "#5b2a86", WARNA_KEC_AKTIF = "#2a0f45";
+const GAYA_NETRAL = { pane: "batasWilayah", color: WARNA_KEC, weight: 2.4, opacity: 1, dashArray: "9 5", fill: true, fillColor: "#b8c4c9", fillOpacity: 0 };
+// garis putih tipis di bawah batas (halo) agar batas tetap terbaca di atas sungai
+fitur("kecamatan").forEach(f => L.polygon(cincin(f), { pane: "batasWilayah", color: "#fff", weight: 5, opacity: .85, fill: false, interactive: false }).addTo(map));
 
 const lapKec = L.layerGroup();
 fitur("kecamatan").forEach(f => {
@@ -127,7 +131,8 @@ fitur("kecamatan").forEach(f => {
   p.on("click", () => pilihKecamatan(n));
 });
 lapKec.addTo(map);
-const batasKab = L.polygon(cincin(fitur("kabupaten")[0]), { color: "#000", weight: 2, opacity: 1, fill: false, interactive: false }).addTo(map);
+L.polygon(cincin(fitur("kabupaten")[0]), { pane: "batasWilayah", color: "#fff", weight: 8, opacity: .9, fill: false, interactive: false }).addTo(map);
+const batasKab = L.polygon(cincin(fitur("kabupaten")[0]), { pane: "batasWilayah", color: "#000", weight: 4, opacity: 1, fill: false, interactive: false }).addTo(map);
 
 function tipKec(n) {
   const c = C(n);
@@ -197,8 +202,8 @@ function isiLabel() {
 
 // area kecamatan dibiarkan polos agar jalan dan sungai jelas; warna tingkat siaga hanya di belakang nama
 function gayaKec(n) {
-  const dasar = { color: "#27424e", weight: 1.3, opacity: 1, dashArray: "6 4", fill: true, fillColor: "#0b4a6f", fillOpacity: 0 };
-  return n === kecAktif ? Object.assign(dasar, { color: "#0a1f2b", weight: 3.5, dashArray: null, fillOpacity: 0.08 }) : dasar;
+  const dasar = { color: WARNA_KEC, weight: 2.4, opacity: 1, dashArray: "9 5", fill: true, fillColor: "#0b4a6f", fillOpacity: 0 };
+  return n === kecAktif ? Object.assign(dasar, { color: WARNA_KEC_AKTIF, weight: 4, dashArray: null, fillOpacity: 0.08 }) : dasar;
 }
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
@@ -362,7 +367,7 @@ function renderOverlay() {
 function renderPetaUpdate() {
   warnaiPeta(); isiLabel();
   $("legenda").innerHTML = [3, 2, 1, 0].map(lv => '<div><i style="background:' + WARNA_LV[lv] + '"></i>' + NAMA_LV[lv] + ' (' + ["0–24", "25–49", "50–74", "75–100"][lv] + ')</div>').join("") +
-    '<div><span class="gj"></span>Jalan</div><div><span class="gs"></span>Sungai</div><div><span class="gb"></span>Batas kabupaten</div><div><span class="gd"></span>Batas kecamatan</div>';
+    '<div><span class="gs"></span>Sungai</div><div><span class="gb"></span>Batas kabupaten</div><div><span class="gd"></span>Batas kecamatan</div>';
 }
 
 // ================= TABEL =================
