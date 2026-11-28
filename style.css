@@ -399,10 +399,10 @@ body.ekspor #statusPeta{display:none}
 .hj-tbl .kat{min-width:82px}
 
 /* ===== logo kop ===== */
-.logo-grup img.logo-pemda{max-height:84px;max-width:80px;width:auto;height:auto}
+.logo-grup img.logo-pemda{max-height:72px;max-width:270px;width:auto;height:auto}
 .logo-grup img.logo-bangkit{max-height:72px;max-width:230px;width:auto;height:auto}
-@media (max-width:760px){.logo-grup img.logo-pemda{max-height:64px}.logo-grup img.logo-bangkit{max-height:52px;max-width:170px}}
-body.ekspor.hal1 .logo-grup img.logo-pemda{max-height:84px;max-width:80px}
+@media (max-width:760px){.logo-grup img.logo-pemda{max-height:52px;max-width:200px}.logo-grup img.logo-bangkit{max-height:52px;max-width:170px}}
+body.ekspor.hal1 .logo-grup img.logo-pemda{max-height:72px;max-width:270px}
 body.ekspor.hal1 .logo-grup img.logo-bangkit{max-height:72px;max-width:230px}
-body.ekspor.hal2 .logo-grup img.logo-pemda{max-height:56px;max-width:44px}
+body.ekspor.hal2 .logo-grup img.logo-pemda{max-height:44px;max-width:170px}
 body.ekspor.hal2 .logo-grup img.logo-bangkit{max-height:40px;max-width:130px}

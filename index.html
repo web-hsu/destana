@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DESTANA — Desa/Kelurahan Tanggap Bencana, Hulu Sungai Utara</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=45">
+  <link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
 
 <!-- ============ KOP ============ -->
 <header class="kop">
-  <div class="logo-grup" id="logoKiri"><img class="logo-pemda" src="logo-pemda.png" alt="Logo Pemerintah Kabupaten Hulu Sungai Utara"></div>
+  <div class="logo-grup" id="logoKiri"><img class="logo-pemda" src="logo-pemda.png?v=2" alt="Logo Pemerintah Kabupaten Hulu Sungai Utara"></div>
   <div class="judul">
     <h1>DESTANA</h1>
     <p class="sub">Desa/Kelurahan Tanggap Bencana</p>
@@ -25,11 +25,8 @@
 
   <!-- tombol aksi -->
   <div class="bar-aksi">
-    <button type="button" class="btn utama" data-buka="modal">Input TMA (opsional)</button>
-    <button type="button" class="btn" id="btJpg">Download JPG (2 gambar)</button>
-    <a class="btn" id="btSheet" href="#" target="_blank" rel="noopener" hidden>Spreadsheet</a>
-    <button type="button" class="btn" id="btPeta" hidden>Simpan data peta</button>
-    <button type="button" class="btn" id="btCetak">Cetak / PDF</button>
+    <button type="button" class="btn utama" id="btJpg">Download JPG</button>
+    <button type="button" class="btn" id="btPdf">Download PDF</button>
   </div>
 
   <!-- status tertinggi -->
@@ -90,24 +87,14 @@
   </div>
 </footer>
 
-<!-- ============ MODAL INPUT PETUGAS ============ -->
-<div class="modal" id="modal" hidden>
-  <div class="modal-kotak" role="dialog" aria-modal="true" aria-labelledby="modalJudul">
-    <div class="modal-kepala">
-      <h2 id="modalJudul">Input TMA (opsional)</h2>
-      <button type="button" class="tutup" data-tutup="modal" aria-label="Tutup">×</button>
-    </div>
-    <div id="modalIsi"></div>
-  </div>
-</div>
-
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="batas-wilayah.js?v=2"></script>
 <script src="data-modul.js?v=26"></script>
 <script src="jalan-sungai.js"></script>
-<script src="app.js?v=45"></script>
+<script src="app.js?v=47"></script>
 </body>
 </html>

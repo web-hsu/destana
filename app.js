@@ -102,7 +102,7 @@ async function muatDasar() {
     d = await unduhDasar();
     if (d) try { localStorage.setItem(SIMPAN_DASAR, JSON.stringify(d)); } catch (_) {}
   }
-  if (d) { gambarDasar(d); $("btPeta").hidden = false; return; }
+  if (d) { gambarDasar(d); return; }
   // cadangan bila data tidak bisa diambil: peta biasa yang dipudarkan
   ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, crossOrigin: true, opacity: 0.8 }).addTo(map);
   toast("Data jalan dan sungai belum bisa diambil. Sementara memakai peta biasa; coba muat ulang beberapa menit lagi.", "err");
@@ -505,27 +505,8 @@ function renderSumber() {
   $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "") + " · v36";
 }
 
-// ================= FORM PETUGAS (modal) =================
-function formHTML(jenis) {
-  let petugas = "", pin = "";
-  try { petugas = localStorage.getItem("petugasBanjir") || ""; pin = sessionStorage.getItem("pinBanjir") || ""; } catch (_) {}
-  const kec = '<label>Kecamatan<select name="kec" required>' + KEC.slice().sort((a, b) => a.localeCompare(b)).map(n => '<option' + (n === kecAktif ? " selected" : "") + '>' + esc(n) + '</option>').join("") + '</select></label>';
-  const akhir = '<label>Nama petugas<input name="petugas" maxlength="60" autocomplete="name" value="' + esc(petugas) + '"></label>' +
-    '<label>PIN input<input name="pin" type="password" inputmode="numeric" autocomplete="off" required value="' + esc(pin) + '"></label>';
-  if (jenis === "tma")
-    return '<form class="form-banjir" data-form="tma">' + kec +
-      '<div class="baris2"><label>TMA (cm)<input name="cm" type="number" step="1" min="-100" max="3000" required inputmode="numeric"></label>' +
-      '<label>Tren<select name="tren"><option value="naik">Naik</option><option value="tetap" selected>Tetap</option><option value="turun">Turun</option></select></label></div>' +
-      '<label>Waktu bacaan WITA (kosongkan = sekarang)<input name="waktu" type="datetime-local"></label>' +
-      '<label>Nama pos duga (opsional)<input name="pos" maxlength="80"></label>' +
-      '<label>Catatan (opsional)<input name="catatan" maxlength="200"></label>' + akhir +
-      '<button type="submit">Simpan pembacaan</button><p class="petunjuk">Waktu bacaan tidak boleh di masa depan atau lebih dari 7 hari lalu. Pembacaan lebih tua dari 48 jam tidak dihitung dalam analisis.</p></form>';
-}
-function bukaModal() {
-  $("modalIsi").innerHTML = formHTML("tma");
-  $("modal").hidden = false;
-}
-function tutupModal() { $("modal").hidden = true; }
+// Input TMA dipindah ke halaman tersendiri: tmadestana/index.html (tidak ditautkan dari dashboard)
+function tutupModal() { const m = $("modal"); if (m) m.hidden = true; }
 
 // ================= UNDUH CSV =================
 function unduh(nama, header, baris) {
@@ -552,12 +533,10 @@ function unduhCSV(jenis) {
 
 // ================= INTERAKSI =================
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-buka]"); if (b) { bukaModal(); return; }
   if (e.target.closest("[data-tutup]") || e.target === $("modal")) { tutupModal(); return; }
   const cs = e.target.closest("[data-csv]"); if (cs) { unduhCSV(cs.dataset.csv); return; }
   const kc = e.target.closest("[data-kec]"); if (kc) { pilihKecamatan(kc.dataset.kec); return; }
 });
-document.addEventListener("submit", e => { const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault(); kirimForm(f); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") tutupModal(); });
 // ----- unduh tampilan sebagai 2 gambar JPG potret (untuk dibagikan ke WhatsApp) -----
 const jeda = ms => new Promise(r => setTimeout(r, ms));
@@ -580,13 +559,30 @@ function simpanBerkas(blob, nama) {
   a.href = URL.createObjectURL(blob); a.download = nama;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
 }
-async function unduhJPG() {
-  const bt = $("btJpg"), body = document.body;
+// susun 2 gambar PDF (1 halaman per gambar, ukuran halaman mengikuti gambar)
+function bacaDataURL(blob) { return new Promise((ok, gagal) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => gagal(new Error("gagal membaca gambar")); r.readAsDataURL(blob); }); }
+function ukuranGambar(url) { return new Promise((ok, gagal) => { const im = new Image(); im.onload = () => ok({ w: im.naturalWidth, h: im.naturalHeight }); im.onerror = () => gagal(new Error("gambar tidak terbaca")); im.src = url; }); }
+async function simpanPDF(daftarBlob, nama) {
+  const JsPDF = window.jspdf && window.jspdf.jsPDF; if (!JsPDF) throw new Error("pustaka PDF belum termuat");
+  let doc = null;
+  for (const blob of daftarBlob) {
+    const url = await bacaDataURL(blob), uk = await ukuranGambar(url);
+    const w = uk.w / 2, h = uk.h / 2, ori = w > h ? "l" : "p";   // gambar dibuat dengan skala 2
+    if (!doc) doc = new JsPDF({ orientation: ori, unit: "px", format: [w, h], hotfixes: ["px_scaling"], compress: true });
+    else doc.addPage([w, h], ori);
+    doc.addImage(url, "JPEG", 0, 0, w, h, undefined, "FAST");
+  }
+  doc.save(nama);
+}
+// jenis: "jpg" (2 gambar) atau "pdf" (1 berkas, 2 halaman)
+async function ekspor(jenis) {
+  const btJ = $("btJpg"), btP = $("btPdf"), bt = jenis === "pdf" ? btP : btJ, body = document.body;
   if (EKSPOR) return;
   if (typeof html2canvas === "undefined") { toast("Pustaka gambar belum termuat. Periksa koneksi internet lalu muat ulang halaman.", "err"); return; }
+  if (jenis === "pdf" && !(window.jspdf && window.jspdf.jsPDF)) { toast("Pustaka PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.", "err"); return; }
   if (!SNAP) { toast("Data belum dimuat, tunggu sebentar", "err"); return; }
   const teks = bt.textContent, pilihan = kecAktif, posisi = window.scrollY;
-  bt.disabled = true; bt.textContent = "Memproses…";
+  btJ.disabled = true; btP.disabled = true; bt.textContent = "Memproses…";
   try {
     tutupModal();
     EKSPOR = true; kecAktif = null;            // gambar selalu berisi ringkasan kabupaten
@@ -604,22 +600,26 @@ async function unduhJPG() {
     const gambar2 = await fotoHalaman(HAL[1]);
     const w = new Date(), p2 = n => String(n).padStart(2, "0");
     const nama = "DESTANA-HSU-" + tglWITA(0) + "-" + p2(w.getHours()) + p2(w.getMinutes());
-    simpanBerkas(gambar1, nama + "-1.jpg");
-    await jeda(800);
-    simpanBerkas(gambar2, nama + "-2.jpg");
-    toast("2 gambar JPG tersimpan. Bila hanya 1 yang muncul, izinkan unduhan ganda di browser.", "ok");
+    if (jenis === "pdf") {
+      await simpanPDF([gambar1, gambar2], nama + ".pdf");
+      toast("PDF tersimpan (2 halaman).", "ok");
+    } else {
+      simpanBerkas(gambar1, nama + "-1.jpg");
+      await jeda(800);
+      simpanBerkas(gambar2, nama + "-2.jpg");
+      toast("2 gambar JPG tersimpan. Bila hanya 1 yang muncul, izinkan unduhan ganda di browser.", "ok");
+    }
   } catch (err) {
-    console.error(err); toast("Gagal membuat gambar: " + (err && err.message || "kesalahan tidak diketahui"), "err");
+    console.error(err); toast("Gagal membuat " + (jenis === "pdf" ? "PDF" : "gambar") + ": " + (err && err.message || "kesalahan tidak diketahui"), "err");
   } finally {
     EKSPOR = false; kecAktif = pilihan;
     body.classList.remove("ekspor", "hal1", "hal2");
     render(); paskanPeta(false); aturLabel(); window.scrollTo(0, posisi);
-    bt.disabled = false; bt.textContent = teks;
+    btJ.disabled = false; btP.disabled = false; bt.textContent = teks;
   }
 }
-$("btJpg").addEventListener("click", unduhJPG);
-$("btPeta").addEventListener("click", simpanBerkasDasar);
-$("btCetak").addEventListener("click", () => window.print());
+$("btJpg").addEventListener("click", () => ekspor("jpg"));
+$("btPdf").addEventListener("click", () => ekspor("pdf"));
 window.addEventListener("beforeprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
 window.addEventListener("afterprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
 // tinggi peta mengikuti tinggi kartu kiri; sesuaikan ulang bila tinggi berubah
@@ -637,7 +637,6 @@ window.addEventListener("error", e => tampilGalat((e.message || "galat") + (e.li
 function langkah(fn) { try { fn(); } catch (err) { console.error(err); const b = $("banner"); b.className = "banner lv3"; b.innerHTML = "<b>Galat tampilan:</b> " + esc(err && err.message) + " <small>Perbarui semua berkas (index.html, style.css, app.js, data-modul.js, batas-wilayah.js) lalu muat ulang dengan Ctrl+F5.</small>"; } }
 function init() {
   langkah(() => { logo($("logoKiri"), typeof LOGO_KIRI === "undefined" ? [] : LOGO_KIRI); logo($("logoKanan"), typeof LOGO_KANAN === "undefined" ? [] : LOGO_KANAN); });
-  langkah(() => { if (SPREADSHEET_URL) { const a = $("btSheet"); a.href = SPREADSHEET_URL; a.hidden = false; } });
   langkah(render);
   langkah(bangunLabel); langkah(render); langkah(() => paskanPeta(false));
   setTimeout(() => langkah(() => { paskanPeta(false); aturLabel(); }), 300);
