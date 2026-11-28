@@ -25,7 +25,7 @@ const C = k => (SNAP && SNAP.kec) ? SNAP.kec[k] || null : null;
 const adaKec = () => KEC.filter(k => C(k));
 
 // ================= PETA =================
-const map = L.map("map", { zoomControl: false, preferCanvas: true, zoomSnap: 0.25, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
+const map = L.map("map", { zoomControl: false, preferCanvas: true, zoomSnap: 0.25, zoomDelta: 0.5, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
 L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
@@ -118,8 +118,24 @@ function opsiPandang() {
 }
 function paskanPeta(animasi) {
   map.invalidateSize({ pan: false });
-  const o = opsiPandang(); o.animate = !!animasi;
-  map.fitBounds(kecAktif ? poligonKec[kecAktif].getBounds() : batasKab.getBounds(), o);
+  const o = opsiPandang(), b = kecAktif ? poligonKec[kecAktif].getBounds() : batasKab.getBounds();
+  try {
+    // cari zoom terbesar (kelipatan 0,25) yang masih memuat seluruh wilayah di area yang tidak tertutup kartu
+    const sz = map.getSize(), pl = o.paddingTopLeft, pr = o.paddingBottomRight;
+    const aw = sz.x - pl[0] - pr[0], ah = sz.y - pl[1] - pr[1];
+    if (aw < 100 || ah < 100) throw new Error("area kecil");
+    let z = 8;
+    for (let t = 14.5; t >= 8; t -= 0.25) {
+      const a = map.project(b.getNorthWest(), t), c = map.project(b.getSouthEast(), t);
+      if (Math.abs(c.x - a.x) <= aw && Math.abs(c.y - a.y) <= ah) { z = t; break; }
+    }
+    const a = map.project(b.getNorthWest(), z), c = map.project(b.getSouthEast(), z);
+    const tengah = L.point((a.x + c.x) / 2, (a.y + c.y) / 2);
+    const P = L.point(pl[0] + aw / 2, pl[1] + ah / 2), C = L.point(sz.x / 2, sz.y / 2);
+    map.setView(map.unproject(tengah.subtract(P.subtract(C)), z), z, { animate: !!animasi });
+  } catch (e) {
+    o.animate = !!animasi; map.fitBounds(b, o);
+  }
 }
 
 function pilihKecamatan(n) {
@@ -203,6 +219,7 @@ function hujanHariIni(c) {
   }
   return { tot: tot, n: list.length, awal: list.length ? list[0].j : null, sedang: (h.jam[iIni] || 0) >= 0.1, list: list };
 }
+const KAT_KELAS = mm => mm < 0.1 ? 0 : mm < 5 ? 1 : mm < 20 ? 2 : mm < 50 ? 3 : 4;
 const KATEGORI_HARIAN = mm => mm < 0.1 ? "Tidak hujan" : mm < 5 ? "Sangat ringan" : mm < 20 ? "Ringan" : mm < 50 ? "Sedang" : mm < 100 ? "Lebat" : mm < 150 ? "Sangat lebat" : "Ekstrem";
 function tabelHujanHariIni() {
   if (!SNAP) return '<span style="color:#5d6f78">' + esc(pesanData()) + '</span>';
@@ -214,17 +231,17 @@ function tabelHujanHariIni() {
     const d = ks[0].d;
     isi = !d || !d.n ? '<tr class="nol"><td>' + esc(kecAktif) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>'
       : d.list.map((x, i) => '<tr><td>' + (i ? "" : esc(kecAktif)) + '</td><td>' + x.j + '</td><td>' + fx(x.mm, 1) + ' mm</td></tr>').join("") +
-        '<tr class="tot"><td></td><td>Total ' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang hujan</span>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm<small>' + KATEGORI_HARIAN(d.tot) + '</small></td></tr>';
+        '<tr class="tot"><td></td><td>Total ' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang hujan</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
   } else {
     isi = ks.map(x => {
       const d = x.d;
       if (!d) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Data belum tersedia</td></tr>';
       if (!d.n) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>';
-      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang</span>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm <span class="kat">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
+      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg" title="sedang hujan">●</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
     }).join("");
   }
   return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Lama hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
-    '<div class="hj-cat">00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan = ≥ 0,1 mm. Estimasi model. Klik kecamatan untuk rincian.</div>';
+    '<div class="hj-cat"><span class="sdg">●</span> = sedang hujan. Data 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan ≥ 0,1 mm. Estimasi model; klik kecamatan untuk rincian.</div>';
 }
 
 // ----- kartu di atas peta -----
@@ -241,7 +258,7 @@ function renderOverlay() {
     const t = rataA(dari.map(x => x.t)), hu = rataA(dari.map(x => x.hu)), ws = rataA(dari.map(x => x.ws));
     const kond = sel ? sel.cuaca.c : modus(dari.map(x => x.c)), hujan = dari.filter(x => /hujan|petir/i.test(x.c || "")).length;
     cuaca = '<div class="ov-isi"><div class="cuaca-atas"><span class="suhu">' + fx(t, 1) + '°C</span><span class="kond">' + esc(kond || "—") +
-      '<small>' + (sel ? "desa wakil: " + esc(sel.cuaca.desa || "-") : (hujan ? hujan + " dari " + dari.length + " kecamatan diprakirakan hujan" : "tidak ada hujan diprakirakan")) + '</small></span></div>' +
+      '<small>' + (sel ? "desa wakil: " + esc(sel.cuaca.desa || "-") : (hujan ? "hujan di " + hujan + " dari " + dari.length + " kecamatan" : "tidak ada hujan diprakirakan")) + '</small></span></div>' +
       '<div class="cuaca-baris"><span><b>' + fx(hu, 0) + '%</b>kelembapan</span><span><b>' + fx(ws, 1) + '</b>km/jam angin</span><span><b>' +
       (sel ? fx(sel.hujan && sel.hujan.ini, 1) : fx(rataA(ks.map(k => C(k).hujan && C(k).hujan.ini)), 1)) + '</b>mm hujan hari ini</span></div></div>';
   }
