@@ -130,7 +130,7 @@ function pilihKecamatan(n) {
 // ================= RENDER =================
 function render() {
   renderKop(); renderBanner(); renderKPI(); renderIndikator(); renderOverlay(); renderPetaUpdate();
-  renderTabel(); renderTren(); renderDetail(); renderHujan(); renderJam(); renderSumber();
+  renderTabel(); renderTren(); renderDetail(); renderHujan(); renderDebit(); renderJam(); renderSumber();
 }
 
 function pesanData() {
@@ -328,7 +328,7 @@ function renderJam() {
   let seri;
   if (sel && sel.hujan && sel.hujan.jam) seri = sel.hujan.jam.slice();
   else { const n = Math.max.apply(null, ada.map(k => C(k).hujan.jam.length)); seri = []; for (let i = 0; i < n; i++) seri.push(rataA(ada.map(k => C(k).hujan.jam[i]))); }
-  const iIni = Math.min(23, seri.length - 1), W = 560, H = 240, L = 40, R = 8, T = 26, B = 40, tinggi = H - T - B, bw = (W - L - R) / seri.length;
+  const iIni = Math.min(23, seri.length - 1), W = 1100, H = 230, L = 40, R = 8, T = 26, B = 40, tinggi = H - T - B, bw = (W - L - R) / seri.length;
   const mk = nice(Math.max(5, Math.max.apply(null, seri) * 1.1));
   const mulai = new Date((sel ? sel.hujan.jamMulai : ada[0] && C(ada[0]).hujan.jamMulai) + ":00Z").getTime();
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Hujan per jam, 24 jam terakhir dan 24 jam ke depan">';
@@ -336,13 +336,39 @@ function renderJam() {
   seri.forEach((v, i) => {
     const h = (v || 0) / mk * tinggi, x = L + i * bw + 1, y = T + tinggi - h;
     s += '<rect x="' + x + '" y="' + y + '" width="' + Math.max(bw - 2, 1) + '" height="' + Math.max(h, v > 0 ? 1 : 0) + '" fill="' + (i < iIni ? "#9fb3bd" : i === iIni ? "#0b4a6f" : "#3b8fc4") + '"/>';
-    if ((i % 6 === 0 && Math.abs(i - iIni) > 2) || i === iIni) { const jam = new Date(mulai + i * 36e5).toISOString().slice(11, 13); s += '<text x="' + (x + bw / 2) + '" y="' + (H - 22) + '" font-size="10.5" fill="#14232b" text-anchor="middle">' + jam + '.00</text>'; }
+    if ((i % 3 === 0 && Math.abs(i - iIni) > 2) || i === iIni) { const jam = new Date(mulai + i * 36e5).toISOString().slice(11, 13); s += '<text x="' + (x + bw / 2) + '" y="' + (H - 22) + '" font-size="10.5" fill="#14232b" text-anchor="middle">' + jam + '.00</text>'; }
   });
   const xi = L + iIni * bw + bw / 2;
   s += '<line x1="' + xi + '" x2="' + xi + '" y1="' + T + '" y2="' + (T + tinggi) + '" stroke="#f08a00" stroke-dasharray="4 3"/><text x="' + xi + '" y="' + (T - 9) + '" font-size="11" font-weight="700" fill="#f08a00" text-anchor="middle">sekarang</text></svg>';
   const t24 = seri.slice(0, iIni + 1).reduce((a, b) => a + (b || 0), 0), d24 = seri.slice(iIni + 1).reduce((a, b) => a + (b || 0), 0);
   el.innerHTML = judul + s + '<div class="gf-legenda"><span><i style="background:#9fb3bd"></i>Teramati (24 jam terakhir)</span><span><i style="background:#0b4a6f"></i>Jam ini</span><span><i style="background:#3b8fc4"></i>Prakiraan 24 jam</span></div>' +
     '<p class="catatan-kecil">Total 24 jam terakhir ' + fmtN(t24, 1) + " mm; prakiraan 24 jam ke depan " + fmtN(d24, 1) + " mm. Hujan terkini adalah estimasi model/satelit Open-Meteo di titik tengah kecamatan, bukan data alat penakar hujan; dapat berbeda dari kondisi lapangan.</p>";
+}
+
+function renderDebit() {
+  const el = $("kDebit");
+  const ks = adaKec().filter(k => C(k).debit && C(k).debit.seri && C(k).debit.seri.length);
+  const kd = kecAktif && ks.indexOf(kecAktif) >= 0 ? kecAktif : (ks.length ? ks.reduce((m, k) => C(k).debit.max7 > C(m).debit.max7 ? k : m, ks[0]) : null);
+  const judul = '<div class="kartu-kepala"><h2>Debit Sungai</h2><span class="petunjuk">' + (kd ? esc(kd) + (kecAktif ? "" : " (debit puncak tertinggi)") : "") + " · m³/s</span></div>";
+  if (!SNAP || !kd) { el.innerHTML = judul + '<div class="kosong">' + esc(SNAP ? "Data debit belum tersedia." : pesanData()) + '</div>'; return; }
+  const d = C(kd).debit, hariIni = tglWITA(0), seri = d.seri;
+  const W = 560, H = 240, L = 44, R = 12, T = 26, B = 42, tinggi = H - T - B, mk = nice(Math.max(1, d.max7, Math.max.apply(null, seri.map(x => x.q))) * 1.1), n = seri.length;
+  const X = i => L + (W - L - R) * (n === 1 ? .5 : i / (n - 1)), Y = v => T + tinggi * (1 - v / mk);
+  const pts = seri.map((x, i) => X(i) + "," + Y(x.q)).join(" ");
+  let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Debit sungai harian">';
+  [0, .5, 1].forEach(f => { const y = T + tinggi * (1 - f); s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="#e1e8e6"/><text x="' + (L - 5) + '" y="' + (y + 4) + '" font-size="11" fill="#5d6f78" text-anchor="end">' + fmtN(mk * f, mk < 10 ? 1 : 0) + '</text>'; });
+  s += '<polygon points="' + X(0) + "," + Y(0) + " " + pts + " " + X(n - 1) + "," + Y(0) + '" fill="rgba(59,143,196,.18)"/><polyline points="' + pts + '" fill="none" stroke="#0b4a6f" stroke-width="2.2"/>';
+  const iIni = seri.findIndex(x => x.d === hariIni);
+  if (iIni >= 0) s += '<line x1="' + X(iIni) + '" x2="' + X(iIni) + '" y1="' + T + '" y2="' + (T + tinggi) + '" stroke="#f08a00" stroke-dasharray="4 3"/><text x="' + X(iIni) + '" y="' + (T - 8) + '" font-size="11" font-weight="700" fill="#f08a00" text-anchor="middle">hari ini</text>';
+  const iMk = seri.reduce((m, x, i) => x.q > seri[m].q ? i : m, 0);
+  seri.forEach((x, i) => {
+    s += '<circle cx="' + X(i) + '" cy="' + Y(x.q) + '" r="' + (i === iMk ? 4.5 : 2.6) + '" fill="' + (i === iMk ? "#d92d27" : "#0b4a6f") + '"/>';
+    if (i % 2 === 0 || n < 9) s += '<text x="' + X(i) + '" y="' + (H - 24) + '" font-size="10.5" fill="#14232b" text-anchor="middle">' + esc(hariSingkat(x.d)) + '</text><text x="' + X(i) + '" y="' + (H - 11) + '" font-size="10.5" fill="#5d6f78" text-anchor="middle">' + tglPendek(x.d) + '</text>';
+  });
+  s += '<text x="' + X(iMk) + '" y="' + (Y(seri[iMk].q) - 9) + '" font-size="11.5" font-weight="800" fill="#d92d27" text-anchor="middle">' + fmtN(seri[iMk].q, 1) + '</text></svg>';
+  el.innerHTML = judul + s +
+    '<p class="catatan-kecil">Sekarang ' + fx(d.now, 1) + " m³/s; rata-rata 7 hari terakhir " + fx(d.base, 1) + "; puncak " + fx(d.max7, 1) + " m³/s" + (d.tglMax ? " pada " + tglPendek(d.tglMax) : "") +
+    (d.rasio != null ? " (" + fx(d.rasio, 2) + "× rata-rata)" : "") + ". Debit adalah hasil simulasi model GloFAS (±5 km), bukan pengukuran alat di lapangan.</p>";
 }
 
 // ================= DETAIL KECAMATAN =================
