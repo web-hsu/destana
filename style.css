@@ -291,14 +291,14 @@ svg.gf text{font-family:var(--font)}
 
 /* ================= GAMBAR JPG (2 halaman potret) =================
    Halaman 1: sama dengan tampilan web di komputer (lebar 1180).
-   Halaman 2: papan tingkat siaga dan Kondisi per Kecamatan (900 x 1273).
+   Halaman 2: papan tingkat siaga, Kondisi per Kecamatan, dan keterangan sumber (lebar sama dengan halaman 1, tinggi mengikuti isi).
    Aktif hanya saat tombol Download JPG ditekan. Selektor body.ekspor sengaja
    lebih kuat daripada aturan responsif, sehingga hasil di HP dan komputer sama. */
 body.ekspor{overflow:hidden}
 body.ekspor .bar-aksi,body.ekspor .aksi-kecil,body.ekspor .peta-kartu .petunjuk,body.ekspor .leaflet-control-zoom,
 body.ekspor .banner,body.ekspor .kpi-isi .nm{display:none}
 body.ekspor.hal1 .halaman > section.kartu:not(.peta-kartu),body.ekspor.hal1 .kpi{display:none}
-body.ekspor.hal2 .indikator,body.ekspor.hal2 .peta-kartu,body.ekspor.hal2 .dua-kolom,body.ekspor.hal2 .sumber{display:none}
+body.ekspor.hal2 .indikator,body.ekspor.hal2 .peta-kartu,body.ekspor.hal2 .dua-kolom{display:none}
 body.ekspor .kaki{margin-top:0}
 
 /* ---------- halaman 1: tata letak web (membatalkan aturan layar kecil) ---------- */
@@ -320,48 +320,36 @@ body.ekspor.hal1 .dua-kolom.sama{grid-template-columns:1fr 1fr}
 body.ekspor.hal1 .kaki-isi{grid-template-columns:1.1fr 1.1fr 1.4fr auto}
 body.ekspor.hal1 .kaki-buka{text-align:right}
 
-/* ---------- halaman 2: papan tingkat siaga + tabel ---------- */
-body.ekspor.hal2{width:900px;height:1273px;display:flex;flex-direction:column;font-size:14px}
-body.ekspor.hal2 .kop{width:100%;max-width:none;margin:0;padding:14px 16px 10px;display:grid;grid-template-columns:190px minmax(0,1fr) 190px;gap:8px;text-align:center}
-body.ekspor.hal2 .logo-grup{display:flex;grid-row:1;grid-column:1;justify-content:flex-start;gap:8px;min-height:0}
-body.ekspor.hal2 .logo-grup.kanan{grid-column:3;justify-content:flex-end}
-body.ekspor.hal2 .logo-grup img{max-height:52px;max-width:58px;min-width:0}
-body.ekspor.hal2 .judul{grid-row:1;grid-column:2}
-body.ekspor.hal2 .judul h1{font-size:40px}
-body.ekspor.hal2 .judul .sub{font-size:19px;margin-top:2px}
+/* ---------- halaman 2: papan tingkat siaga + tabel + sumber (lebar sama dengan halaman 1) ---------- */
+body.ekspor.hal2{width:1180px;font-size:14px}
+body.ekspor.hal2 .kop{grid-template-columns:1fr minmax(0,2fr) 1fr;text-align:initial}
+body.ekspor.hal2 .logo-grup{justify-content:flex-start;min-height:56px;display:flex}
+body.ekspor.hal2 .logo-grup.kanan{justify-content:flex-end}
+body.ekspor.hal2 .judul h1{font-size:48px}
+body.ekspor.hal2 .judul .sub{font-size:19px}
 body.ekspor.hal2 .judul .sub2{font-size:15px}
-body.ekspor.hal2 .judul .waktu{font-size:15px;font-weight:700;color:var(--teks);margin-top:4px}
 
-body.ekspor.hal2 .halaman{width:100%;max-width:none;margin:0;padding:0 16px;gap:10px;flex:1;min-height:0}
-body.ekspor.hal2 .kartu{padding:10px 14px;box-shadow:none}
-body.ekspor.hal2 .kartu-kepala{margin-bottom:6px}
-body.ekspor.hal2 .kartu-kepala h2{font-size:18px}
-
-body.ekspor.hal2 .halaman > section.kartu:not(.peta-kartu){flex:none;padding:14px}
+body.ekspor.hal2 .kartu{box-shadow:none}
+body.ekspor.hal2 .halaman > section.kartu:not(.peta-kartu){flex:none;padding:16px}
 body.ekspor.hal2 .kartu-kepala h2{font-size:22px}
-body.ekspor.hal2 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:none}
-body.ekspor.hal2 .kpi-kartu{padding:10px 12px;gap:10px;box-shadow:none}
+body.ekspor.hal2 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:none}
+body.ekspor.hal2 .kpi-kartu{padding:12px 14px;gap:12px;box-shadow:none}
 body.ekspor.hal2 .kpi-ikon{width:56px;height:56px} body.ekspor.hal2 .kpi-ikon i{width:38px;height:38px}
 body.ekspor.hal2 .kpi-isi .lb{font-size:15px}
 body.ekspor.hal2 .kpi-isi .angka{font-size:34px}
 body.ekspor.hal2 .kpi-isi .sm{font-size:12.5px;white-space:nowrap}
 body.ekspor.hal2 .tabel-bungkus{overflow:visible}
-body.ekspor.hal2 table.tb{font-size:16px;line-height:1.25}
-body.ekspor.hal2 .tb th{font-size:11.5px;padding:8px 4px;position:static;white-space:normal;vertical-align:bottom}
-body.ekspor.hal2 .tb td{padding:4px;height:71px}
+body.ekspor.hal2 table.tb{font-size:17px;line-height:1.25}
+body.ekspor.hal2 .tb th{font-size:12px;padding:8px 6px;position:static;white-space:normal;vertical-align:bottom}
+body.ekspor.hal2 .tb td{padding:5px 6px;height:58px}
 body.ekspor.hal2 .tb td.t{white-space:normal}
-body.ekspor.hal2 .tabel-bungkus .sm-muted{font-size:12.5px;white-space:nowrap}
-body.ekspor.hal2 .tabel-bungkus p.sm-muted{white-space:normal;margin-top:10px!important;font-size:12px}
+body.ekspor.hal2 .tabel-bungkus .sm-muted{font-size:13px;white-space:nowrap}
+body.ekspor.hal2 .tabel-bungkus p.sm-muted{white-space:normal;margin-top:10px!important;font-size:12.5px}
 body.ekspor.hal2 .lencana{font-size:13px;padding:4px 10px;min-width:80px}
-body.ekspor.hal2 .skor-sel .mini{width:36px;height:7px}
+body.ekspor.hal2 .skor-sel .mini{width:44px;height:7px}
 
-body.ekspor.hal2 .kaki-isi{max-width:none;padding:11px 16px;grid-template-columns:1.15fr 1fr 1.35fr .8fr;gap:12px}
-body.ekspor.hal2 .kaki-isi b{font-size:13.5px}
-body.ekspor.hal2 .kaki-isi span{font-size:11.5px}
-body.ekspor.hal2 .merek b{font-size:20px}
-body.ekspor.hal2 .kaki-sumber b{font-size:11.5px}
-body.ekspor.hal2 .kaki-buka{font-size:11.5px;text-align:right}
-body.ekspor.hal2 .kaki{flex:none;margin:0}
+body.ekspor.hal2 .kaki-isi{grid-template-columns:1.1fr 1.1fr 1.4fr auto}
+body.ekspor.hal2 .kaki-buka{text-align:right}
 body.ekspor #statusPeta{display:none}
 
 /* ===== kartu melayang di atas peta: latar berwarna + tulisan lebih tegas ===== */
@@ -404,5 +392,5 @@ body.ekspor #statusPeta{display:none}
 @media (max-width:760px){.logo-grup img.logo-pemda{max-height:52px;max-width:200px}.logo-grup img.logo-bangkit{max-height:52px;max-width:170px}}
 body.ekspor.hal1 .logo-grup img.logo-pemda{max-height:72px;max-width:270px}
 body.ekspor.hal1 .logo-grup img.logo-bangkit{max-height:72px;max-width:230px}
-body.ekspor.hal2 .logo-grup img.logo-pemda{max-height:44px;max-width:170px}
-body.ekspor.hal2 .logo-grup img.logo-bangkit{max-height:40px;max-width:130px}
+body.ekspor.hal2 .logo-grup img.logo-pemda{max-height:72px;max-width:270px}
+body.ekspor.hal2 .logo-grup img.logo-bangkit{max-height:72px;max-width:230px}

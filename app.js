@@ -15,7 +15,7 @@ const IKON_TETES = '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.2 6 7.4 6 10
 
 let kecAktif = null;      // kecamatan yang dipilih (null = ringkasan kabupaten)
 let EKSPOR = false;       // true saat membuat gambar JPG (tata letak khusus 2 halaman)
-const HAL = [{ l: 1180 }, { l: 900, t: 1273 }];   // ukuran gambar 1 dan 2 (lebar samakan dengan style.css); tinggi gambar 1 mengikuti isi
+const HAL = [{ l: 1180 }, { l: 1180 }];   // lebar gambar 1 dan 2 sama (samakan dengan style.css); tinggi mengikuti isi masing-masing
 
 function toast(teks, jenis) {
   const el = $("toast"); el.textContent = teks;
