@@ -26,7 +26,7 @@ const adaKec = () => KEC.filter(k => C(k));
 
 // ================= PETA =================
 const map = L.map("map", { zoomControl: false, preferCanvas: true, zoomSnap: 0.25, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
-L.control.zoom({ position: "topright" }).addTo(map);
+L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
@@ -114,7 +114,7 @@ function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setSt
 
 function opsiPandang() {
   const w = map.getSize().x, pad = w > 1000 ? 12 : 12;
-  return { paddingTopLeft: [w > 1000 ? 410 : 12, 14], paddingBottomRight: [12, w > 1000 ? 190 : 14], maxZoom: 13, animate: false };
+  return { paddingTopLeft: [w > 1000 ? 420 : 12, 14], paddingBottomRight: [w > 1000 ? 185 : 12, w > 1000 ? 215 : 14], maxZoom: 13, animate: false };
 }
 function paskanPeta(animasi) {
   map.invalidateSize({ pan: false });
@@ -341,7 +341,7 @@ function renderJam() {
   let seri;
   if (sel && sel.hujan && sel.hujan.jam) seri = sel.hujan.jam.slice();
   else { const n = Math.max.apply(null, ada.map(k => C(k).hujan.jam.length)); seri = []; for (let i = 0; i < n; i++) seri.push(rataA(ada.map(k => C(k).hujan.jam[i]))); }
-  const iIni = Math.min(23, seri.length - 1), W = 680, H = 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
+  const iIni = Math.min(23, seri.length - 1), W = 820, H = 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
   const mk = nice(Math.max(5, Math.max.apply(null, seri) * 1.1));
   const mulai = new Date((sel ? sel.hujan.jamMulai : ada[0] && C(ada[0]).hujan.jamMulai) + ":00Z").getTime();
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Hujan per jam, 24 jam terakhir dan 24 jam ke depan">';

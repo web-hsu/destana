@@ -116,14 +116,14 @@ button{font-family:inherit}
 .top-baris .bar{height:7px;border-radius:4px;background:#e6edeb;overflow:hidden}
 .top-baris .bar i{display:block;height:100%}
 .top-baris .sk{text-align:right;font-weight:800}
-.ov-jam{position:absolute;z-index:500;left:414px;right:200px;bottom:12px;background:rgba(255,255,255,.96);border-radius:10px;box-shadow:0 2px 10px rgba(16,32,31,.18);padding:7px 12px 6px}
+.ov-jam{position:absolute;z-index:500;left:414px;right:64px;bottom:26px;background:rgba(255,255,255,.96);border-radius:10px;box-shadow:0 2px 10px rgba(16,32,31,.18);padding:7px 12px 6px}
 .ov-jam .gf{display:block;width:100%;height:auto}
 .jam-kepala{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
 .jam-kepala b{color:var(--brand)} .jam-kepala span{font-size:12.5px;color:var(--muted)}
 .jam-kaki{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:2px}
 .jam-kaki i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
 .jam-kaki .jam-cat{margin-left:auto}
-.legenda{position:absolute;z-index:500;right:12px;bottom:26px;background:rgba(255,255,255,.96);border-radius:10px;box-shadow:0 2px 10px rgba(16,32,31,.18);padding:9px 12px;font-size:12px}
+.legenda{position:absolute;z-index:500;right:12px;top:12px;background:rgba(255,255,255,.96);border-radius:10px;box-shadow:0 2px 10px rgba(16,32,31,.18);padding:9px 12px;font-size:12px}
 .legenda div{display:flex;align-items:center;gap:7px;line-height:1.7}
 .legenda i{width:11px;height:11px;border-radius:50%;display:inline-block}
 .legenda .gb{display:inline-block;width:18px;border-top:2px solid #111;height:0}
