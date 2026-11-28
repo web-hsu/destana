@@ -1,1 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Input TMA — DESTANA Hulu Sungai Utara</title>
+  <link rel="stylesheet" href="../style.css?v=47">
+  <style>
+    body{background:var(--bg)}
+    .tma-halaman{max-width:520px;margin:0 auto;padding:24px 16px 40px}
+    .tma-kop{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+    .tma-kop img{max-height:56px;max-width:190px;width:auto;height:auto}
+    .tma-kop h1{margin:0;font-size:20px;line-height:1.2;color:var(--brand)}
+    .tma-kop p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+    .tma-kotak{background:#fff;border:1px solid var(--garis);border-radius:14px;padding:18px 20px 20px;box-shadow:0 1px 3px rgba(16,32,31,.06)}
+    .tma-kembali{display:inline-block;margin-top:14px;font-size:13px;color:var(--brand);text-decoration:none}
+    .tma-kembali:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+<main class="tma-halaman">
+  <div class="tma-kop">
+    <img src="../logo-pemda.png?v=2" alt="Logo Pemerintah Kabupaten Hulu Sungai Utara">
+    <div>
+      <h1>Input Tinggi Muka Air (TMA)</h1>
+      <p>DESTANA — khusus petugas pos duga</p>
+    </div>
+  </div>
+  <div class="tma-kotak" id="formArea">Memuat formulir…</div>
+  <a class="tma-kembali" href="../">← Kembali ke dashboard DESTANA</a>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Fungsi bantu yang biasanya disediakan app.js; dibutuhkan oleh kirimForm() di data-modul.js -->
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+let kecAktif = null;
+function toast(teks, jenis) {
+  const el = $("toast"); el.textContent = teks;
+  el.className = "toast tampil " + (jenis === "err" ? "err" : "ok");
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("tampil"), jenis === "err" ? 6500 : 3500);
+}
+function render() {}
+// dipanggil kirimForm() setelah simpan berhasil: kosongkan isian pembacaan, nama petugas dan PIN dipertahankan
+function tutupModal() { setTimeout(() => { const f = document.querySelector("form[data-form]"); if (f) { ["cm", "waktu", "catatan"].forEach(n => { if (f.elements[n]) f.elements[n].value = ""; }); if (f.elements.cm) f.elements.cm.focus(); } }, 0); }
+</script>
+<script src="../data-modul.js?v=26"></script>
+<script>
+(function () {
+  const area = $("formArea");
+  if (typeof KEC === "undefined" || typeof kirimForm !== "function") {
+    area.innerHTML = '<b>Formulir tidak bisa dimuat.</b><p class="petunjuk">Pastikan <code>data-modul.js</code> sudah terunggah di folder utama DESTANA (satu tingkat di atas folder ini), lalu muat ulang dengan Ctrl+F5.</p>';
+    return;
+  }
+  let petugas = "", pin = "";
+  try { petugas = localStorage.getItem("petugasBanjir") || ""; pin = sessionStorage.getItem("pinBanjir") || ""; } catch (_) {}
+  const kec = '<label>Kecamatan<select name="kec" required>' + KEC.slice().sort((a, b) => a.localeCompare(b)).map(n => '<option>' + esc(n) + '</option>').join("") + '</select></label>';
+  const akhir = '<label>Nama petugas<input name="petugas" maxlength="60" autocomplete="name" value="' + esc(petugas) + '"></label>' +
+    '<label>PIN input<input name="pin" type="password" inputmode="numeric" autocomplete="off" required value="' + esc(pin) + '"></label>';
+  area.innerHTML = '<form class="form-banjir" data-form="tma">' + kec +
+    '<div class="baris2"><label>TMA (cm)<input name="cm" type="number" step="1" min="-100" max="3000" required inputmode="numeric"></label>' +
+    '<label>Tren<select name="tren"><option value="naik">Naik</option><option value="tetap" selected>Tetap</option><option value="turun">Turun</option></select></label></div>' +
+    '<label>Waktu bacaan WITA (kosongkan = sekarang)<input name="waktu" type="datetime-local"></label>' +
+    '<label>Nama pos duga (opsional)<input name="pos" maxlength="80"></label>' +
+    '<label>Catatan (opsional)<input name="catatan" maxlength="200"></label>' + akhir +
+    '<button type="submit">Simpan pembacaan</button><p class="petunjuk">Waktu bacaan tidak boleh di masa depan atau lebih dari 7 hari lalu. Pembacaan lebih tua dari 48 jam tidak dihitung dalam analisis.</p></form>';
+  document.addEventListener("submit", e => {
+    const f = e.target.closest("form[data-form]"); if (!f) return;
+    e.preventDefault();
+    try { kirimForm(f); } catch (err) { console.error(err); toast("Gagal mengirim: " + (err && err.message || "kesalahan tidak diketahui"), "err"); }
+  });
+})();
+</script>
+</body>
+</html>
