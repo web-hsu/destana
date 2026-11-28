@@ -286,3 +286,108 @@ svg.gf text{font-family:var(--font)}
   .dua-kolom,.dua-kolom.sama{grid-template-columns:1fr}
   .kaki{margin-top:10px}
 }
+
+/* ================= GAMBAR JPG (2 halaman potret, lebar 900) =================
+   Halaman 1: ringkasan, peta, grafik, sumber data. Halaman 2: Kondisi per Kecamatan.
+   Aktif hanya saat tombol Download JPG ditekan. Selektor body.ekspor sengaja
+   lebih kuat daripada aturan responsif, sehingga hasil di HP dan komputer sama. */
+body.ekspor{width:900px;overflow:hidden;display:flex;flex-direction:column;font-size:14px}
+body.ekspor.hal1{height:1500px}
+body.ekspor.hal2{height:1273px}
+body.ekspor.hal1 .halaman > section.kartu:not(.peta-kartu){display:none}
+body.ekspor.hal2 .kpi,body.ekspor.hal2 .indikator,body.ekspor.hal2 .peta-kartu,body.ekspor.hal2 .dua-kolom,body.ekspor.hal2 .sumber{display:none}
+body.ekspor .bar-aksi,body.ekspor .aksi-kecil,body.ekspor .peta-kartu .petunjuk,body.ekspor .leaflet-control-zoom{display:none}
+
+body.ekspor .kop{width:100%;max-width:none;margin:0;padding:14px 16px 10px;display:grid;grid-template-columns:190px minmax(0,1fr) 190px;gap:8px;text-align:center}
+body.ekspor .logo-grup{display:flex;grid-row:1;grid-column:1;justify-content:flex-start;gap:8px;min-height:0}
+body.ekspor .logo-grup.kanan{grid-column:3;justify-content:flex-end}
+body.ekspor .logo-grup img{max-height:52px;max-width:58px;min-width:0}
+body.ekspor .judul{grid-row:1;grid-column:2}
+body.ekspor .judul h1{font-size:40px}
+body.ekspor .judul .sub{font-size:19px;margin-top:2px}
+body.ekspor .judul .sub2{font-size:15px}
+body.ekspor .judul .waktu{font-size:15px;font-weight:700;color:var(--teks);margin-top:4px}
+
+body.ekspor .halaman{width:100%;max-width:none;margin:0;padding:0 16px;gap:10px;flex:1;min-height:0}
+body.ekspor .kartu{padding:10px 14px;box-shadow:none}
+body.ekspor .kartu-kepala{margin-bottom:6px}
+body.ekspor .kartu-kepala h2{font-size:18px}
+
+/* gambar unduhan: tanpa kotak himbauan dan tanpa daftar nama kecamatan di papan tingkat */
+body.ekspor .banner,body.ekspor .kpi-isi .nm{display:none}
+
+body.ekspor .kpi{grid-template-columns:repeat(4,1fr);gap:10px;flex:none}
+body.ekspor .kpi-kartu{padding:10px 12px;gap:10px;box-shadow:none}
+body.ekspor .kpi-ikon{width:56px;height:56px} body.ekspor .kpi-ikon i{width:38px;height:38px}
+body.ekspor .kpi-isi .lb{font-size:15px}
+body.ekspor .kpi-isi .angka{font-size:34px}
+body.ekspor .kpi-isi .sm{font-size:12.5px;white-space:nowrap}
+
+body.ekspor .indikator{grid-template-columns:repeat(5,1fr);gap:10px;flex:none}
+body.ekspor .ind{padding:8px 9px}
+body.ekspor .ind .lb{font-size:11.5px;letter-spacing:0;line-height:1.25;min-height:29px}
+body.ekspor .ind .nilai{font-size:27px}
+body.ekspor .ind .sm{font-size:12px;line-height:1.3}
+
+/* halaman 1: peta dengan kartu cuaca, hujan hari ini, dan hujan per jam di atasnya */
+body.ekspor .peta-kartu{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 14px 6px}
+body.ekspor .peta-badan{flex:1;min-height:0;padding:0;border:1px solid var(--garis);border-radius:10px;overflow:hidden;position:relative}
+body.ekspor #map{position:absolute;top:0;left:0;right:0;bottom:0;height:auto;border:0;border-radius:0}
+body.ekspor .ov{position:static;width:auto;padding:0;display:block}
+body.ekspor .ov-kartu,body.ekspor .ov-jam{box-shadow:none;border:1px solid var(--garis);background:#fff}
+body.ekspor #ovCuaca{position:absolute;left:8px;top:8px;width:342px}
+body.ekspor #ovRekom{position:absolute;left:8px;bottom:8px;width:342px}
+body.ekspor .ov-jam{position:absolute;left:358px;right:8px;bottom:8px;margin:0;width:auto;padding:5px 8px}
+body.ekspor .ov-judul{font-size:14px;padding:5px 10px}
+body.ekspor .ov-isi{padding:5px 10px 6px}
+body.ekspor .cuaca-atas .suhu{font-size:30px}
+body.ekspor .cuaca-atas .kond{font-size:15px}
+body.ekspor .cuaca-baris{margin-top:4px}
+body.ekspor .hj-tbl{font-size:12.5px}
+body.ekspor .hj-tbl th{font-size:10.5px;padding:3px 5px}
+body.ekspor .hj-tbl td{padding:1px 4px;height:22px}
+body.ekspor #ovRekom .ov-judul small{display:none}
+body.ekspor #ovRekom .ov-isi{padding:3px 6px 5px}
+body.ekspor .hj-tbl .kat{font-size:10.5px;min-width:70px;padding:0 3px}
+body.ekspor .hj-cat{font-size:10.5px;margin-top:3px;line-height:1.25}
+body.ekspor .jam-kepala{font-size:14px}
+body.ekspor .jam-kepala span{font-size:11.5px}
+body.ekspor .ov-jam svg.gf text{font-size:12px}
+body.ekspor .jam-kaki{gap:2px 12px;font-size:11.5px;margin-top:0}
+body.ekspor .jam-kaki .jam-cat{display:none}
+body.ekspor .legenda{position:absolute;left:358px;right:8px;top:8px;margin:0;width:auto;display:flex;flex-wrap:wrap;justify-content:center;gap:0 14px;font-size:12px;padding:5px 8px;box-shadow:none;border:1px solid var(--garis)}
+body.ekspor .legenda div{line-height:1.6}
+body.ekspor .peta-atribusi{margin-top:2px;font-size:10px}
+
+/* halaman 1: dua grafik berdampingan dan sumber data */
+body.ekspor .dua-kolom,body.ekspor .dua-kolom.sama{grid-template-columns:1fr 1fr;gap:10px;flex:none}
+body.ekspor.hal1 .dua-kolom .kartu{padding:10px 12px}
+body.ekspor #kHujan h2,body.ekspor #kDebit h2{font-size:16px}
+body.ekspor #kHujan .kartu-kepala,body.ekspor #kDebit .kartu-kepala{gap:4px}
+body.ekspor #kHujan .petunjuk,body.ekspor #kDebit .petunjuk{font-size:11px}
+body.ekspor #kHujan svg.gf text,body.ekspor #kDebit svg.gf text{font-size:11.5px}
+body.ekspor .gf-legenda{margin-top:2px;font-size:11.5px}
+body.ekspor .catatan-kecil{margin-top:5px;padding:5px 9px;font-size:11.5px;line-height:1.3}
+body.ekspor .sumber{padding:7px 14px;font-size:12px;line-height:1.3;flex:none}
+body.ekspor .sumber p{margin-top:2px}
+
+/* halaman 2: hanya tabel Kondisi per Kecamatan */
+body.ekspor.hal2 .halaman > section.kartu:not(.peta-kartu){flex:none;padding:14px}
+body.ekspor.hal2 .kartu-kepala h2{font-size:22px}
+body.ekspor .tabel-bungkus{overflow:visible}
+body.ekspor table.tb{font-size:16px;line-height:1.25}
+body.ekspor .tb th{font-size:11.5px;padding:8px 4px;position:static;white-space:normal;vertical-align:bottom}
+body.ekspor .tb td{padding:4px;height:80px}
+body.ekspor .tb td.t{white-space:normal}
+body.ekspor .tabel-bungkus .sm-muted{font-size:12.5px;white-space:nowrap}
+body.ekspor .tabel-bungkus p.sm-muted{white-space:normal;margin-top:10px!important;font-size:12px}
+body.ekspor .lencana{font-size:13px;padding:4px 10px;min-width:80px}
+body.ekspor .skor-sel .mini{width:36px;height:7px}
+
+body.ekspor .kaki{flex:none;margin:10px 16px 14px;border-radius:12px}
+body.ekspor .kaki-isi{max-width:none;padding:11px 16px;grid-template-columns:1.15fr 1fr 1.35fr .8fr;gap:12px}
+body.ekspor .kaki-isi b{font-size:13.5px}
+body.ekspor .kaki-isi span{font-size:11.5px}
+body.ekspor .merek b{font-size:20px}
+body.ekspor .kaki-sumber b{font-size:11.5px}
+body.ekspor .kaki-buka{font-size:11.5px;text-align:right}

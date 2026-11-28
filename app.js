@@ -14,6 +14,8 @@ const $ = id => document.getElementById(id);
 const IKON_TETES = '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.2 6 7.4 6 10.6A6 6 0 0 1 6 13.1c0-3.200 2.400-6.400 6-10.600z"/></svg>';
 
 let kecAktif = null;      // kecamatan yang dipilih (null = ringkasan kabupaten)
+let EKSPOR = false;       // true saat membuat gambar JPG (tata letak khusus 2 halaman)
+const HAL_L = 900, HAL_T = [1500, 1273];   // lebar dan tinggi gambar 1 dan 2 (samakan dengan style.css); disimpan 2x lebih tajam
 
 function toast(teks, jenis) {
   const el = $("toast"); el.textContent = teks;
@@ -29,7 +31,7 @@ const map = L.map("map", { attributionControl: false, zoomControl: false, prefer
 L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19, crossOrigin: true }).addTo(map);
+const ubin = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19, crossOrigin: true }).addTo(map);
 
 const cincin = f => f.geometry.coordinates.map(c => [c[1], c[0]]);
 const fitur = lv => BATAS_HSU_GEOJSON.features.filter(f => f.properties && f.properties.level === lv);
@@ -113,10 +115,12 @@ function gayaKec(n) {
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
 function opsiPandang() {
-  const w = map.getSize().x, pad = w > 1000 ? 12 : 12;
+  if (EKSPOR) return { paddingTopLeft: [362, 62], paddingBottomRight: [14, 212], maxZoom: 14, animate: false };
+  const w = map.getSize().x;
   return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 14, animate: false };
 }
 function paskanPeta(animasi) {
+  if (!map.getContainer().offsetWidth) return;   // peta sedang disembunyikan
   map.invalidateSize({ pan: false });
   const o = opsiPandang(), b = kecAktif ? poligonKec[kecAktif].getBounds() : batasKab.getBounds();
   try {
@@ -303,7 +307,7 @@ const hariSingkat = d => new Date(d + "T00:00:00").toLocaleDateString("id-ID", {
 
 // batang: items [{d, v, k}] k = lalu | ini | depan
 function svgBatang(items, opsi) {
-  const W = 560, H = 240, L = 40, R = 8, T = 24, B = 42, n = items.length, tinggi = H - T - B;
+  const W = EKSPOR ? 405 : 560, H = EKSPOR ? 190 : 240, L = 40, R = 8, T = EKSPOR ? 18 : 24, B = 42, n = items.length, tinggi = H - T - B;
   const mk = nice(Math.max(opsi.min || 1, Math.max.apply(null, items.map(i => i.v)) * 1.08));
   const bw = (W - L - R) / n, warna = { lalu: "#9fb3bd", ini: "#0b4a6f", depan: "#3b8fc4" };
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opsi.label) + '">';
@@ -342,7 +346,7 @@ function renderJam() {
   let seri;
   if (sel && sel.hujan && sel.hujan.jam) seri = sel.hujan.jam.slice();
   else { const n = Math.max.apply(null, ada.map(k => C(k).hujan.jam.length)); seri = []; for (let i = 0; i < n; i++) seri.push(rataA(ada.map(k => C(k).hujan.jam[i]))); }
-  const iIni = Math.min(23, seri.length - 1), W = 820, H = 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
+  const iIni = Math.min(23, seri.length - 1), W = EKSPOR ? 470 : 820, H = EKSPOR ? 142 : 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
   const mk = nice(Math.max(5, Math.max.apply(null, seri) * 1.1));
   const mulai = new Date((sel ? sel.hujan.jamMulai : ada[0] && C(ada[0]).hujan.jamMulai) + ":00Z").getTime();
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Hujan per jam, 24 jam terakhir dan 24 jam ke depan">';
@@ -367,7 +371,7 @@ function renderDebit() {
   const judul = '<div class="kartu-kepala"><h2>Debit Sungai</h2><span class="petunjuk">' + (kd ? esc(kd) + (kecAktif ? "" : " (debit puncak tertinggi)") : "") + " · m³/s</span></div>";
   if (!SNAP || !kd) { el.innerHTML = judul + '<div class="kosong">' + esc(SNAP ? "Data debit belum tersedia." : pesanData()) + '</div>'; return; }
   const d = C(kd).debit, hariIni = tglWITA(0), seri = d.seri;
-  const W = 560, H = 240, L = 44, R = 12, T = 26, B = 42, tinggi = H - T - B, mk = nice(Math.max(1, d.max7, Math.max.apply(null, seri.map(x => x.q))) * 1.1), n = seri.length;
+  const W = EKSPOR ? 405 : 560, H = EKSPOR ? 190 : 240, L = 44, R = 12, T = 26, B = 42, tinggi = H - T - B, mk = nice(Math.max(1, d.max7, Math.max.apply(null, seri.map(x => x.q))) * 1.1), n = seri.length;
   const X = i => L + (W - L - R) * (n === 1 ? .5 : i / (n - 1)), Y = v => T + tinggi * (1 - v / mk);
   const pts = seri.map((x, i) => X(i) + "," + Y(x.q)).join(" ");
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Debit sungai harian">';
@@ -391,7 +395,6 @@ function renderDebit() {
 function renderSumber() {
   $("sumber").innerHTML = '<b>Sumber data dan cara membaca</b>' +
     '<p><b style="display:inline">Sumber:</b> prakiraan cuaca BMKG (semua kecamatan); curah hujan terkini, 24/72 jam terakhir, dan prakiraan dari Open-Meteo; debit sungai GloFAS (model); tinggi muka air (opsional) diinput petugas. Semua data direkam tiap jam di Google Sheet DESTANA sebagai riwayat.</p>' +
-    '<p>Skor bahaya banjir 0–100 dihitung dari curah hujan (teramati 24 jam dan prakiraan 3 hari; 30%), tinggi muka air bila ada (35%), dan debit model (25%), diperbesar hingga +25% oleh kepadatan penduduk. Tingkat: Normal &lt; 25, Waspada 25–49, Siaga 50–74, Awas ≥ 75. Tanpa TMA terukur (≤ 48 jam) status dibatasi maksimal Siaga; Awas hanya bila ada pembacaan TMA. Ambang TMA mengikuti sheet "Ambang TMA".</p>' +
     '<p>Aplikasi ini alat bantu pemantauan, bukan pengganti peringatan resmi BPBD, BMKG, dan BWS.</p>';
   $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(/\./g, ".").replace(",", "");
 }
@@ -450,34 +453,61 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("submit", e => { const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault(); kirimForm(f); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") tutupModal(); });
-// ----- unduh tampilan sebagai gambar JPG (untuk dibagikan ke status WhatsApp) -----
-function unduhJPG() {
-  const bt = $("btJpg");
+// ----- unduh tampilan sebagai 2 gambar JPG potret (untuk dibagikan ke WhatsApp) -----
+const jeda = ms => new Promise(r => setTimeout(r, ms));
+async function tungguPeta(maksMs) {
+  await jeda(500);
+  const mulai = Date.now();
+  while (ubin.isLoading() && Date.now() - mulai < maksMs) await jeda(150);
+  await jeda(500);
+}
+function fotoHalaman(tinggi) {
+  return html2canvas(document.body, {
+    scale: 2, width: HAL_L, height: tinggi, windowWidth: 1280, windowHeight: tinggi,
+    useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0,
+    onclone: doc => doc.querySelectorAll(".bar-aksi,.leaflet-control-zoom,#toast,#modal").forEach(e => { e.style.display = "none"; })
+  }).then(cv => new Promise((ok, gagal) => cv.toBlob(b => b ? ok(b) : gagal(new Error("gambar kosong")), "image/jpeg", 0.92)));
+}
+function simpanBerkas(blob, nama) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nama;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+}
+async function unduhJPG() {
+  const bt = $("btJpg"), body = document.body;
+  if (EKSPOR) return;
   if (typeof html2canvas === "undefined") { toast("Pustaka gambar belum termuat. Periksa koneksi internet lalu muat ulang halaman.", "err"); return; }
   if (!SNAP) { toast("Data belum dimuat, tunggu sebentar", "err"); return; }
-  const teks = bt.textContent; bt.disabled = true; bt.textContent = "Memproses…";
-  tutupModal(); $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "");
-  paskanPeta(false); window.scrollTo(0, 0);
-  const selesai = () => { bt.disabled = false; bt.textContent = teks; };
-  setTimeout(() => {
-    html2canvas(document.body, {
-      scale: Math.min(2, Math.max(1, 2400 / Math.max(document.documentElement.clientWidth, 1))),
-      useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0,
-      windowWidth: document.documentElement.clientWidth,
-      onclone: doc => doc.querySelectorAll(".bar-aksi,.leaflet-control-zoom,#toast,#modal").forEach(e => { e.style.display = "none"; })
-    }).then(cv => {
-      cv.toBlob(blob => {
-        selesai();
-        if (!blob) { toast("Gagal membuat gambar", "err"); return; }
-        const w = new Date(), p2 = n => String(n).padStart(2, "0");
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "DESTANA-HSU-" + tglWITA(0) + "-" + p2(w.getHours()) + p2(w.getMinutes()) + ".jpg";
-        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        toast("Gambar JPG tersimpan", "ok");
-      }, "image/jpeg", 0.92);
-    }).catch(err => { console.error(err); selesai(); toast("Gagal membuat gambar: " + (err && err.message || "kesalahan tidak diketahui"), "err"); });
-  }, 500);
+  const teks = bt.textContent, pilihan = kecAktif, posisi = window.scrollY;
+  bt.disabled = true; bt.textContent = "Memproses…";
+  try {
+    tutupModal();
+    EKSPOR = true; kecAktif = null;            // gambar selalu berisi ringkasan kabupaten
+    body.classList.add("ekspor", "hal1");
+    render(); window.scrollTo(0, 0);
+    paskanPeta(false); aturLabel();
+    await tungguPeta(8000);
+    paskanPeta(false); aturLabel();
+    await jeda(300);
+    const gambar1 = await fotoHalaman(HAL_T[0]);
+    body.classList.replace("hal1", "hal2");
+    render();                                  // data bisa diperbarui saat menunggu
+    await jeda(300);
+    const gambar2 = await fotoHalaman(HAL_T[1]);
+    const w = new Date(), p2 = n => String(n).padStart(2, "0");
+    const nama = "DESTANA-HSU-" + tglWITA(0) + "-" + p2(w.getHours()) + p2(w.getMinutes());
+    simpanBerkas(gambar1, nama + "-1.jpg");
+    await jeda(800);
+    simpanBerkas(gambar2, nama + "-2.jpg");
+    toast("2 gambar JPG tersimpan. Bila hanya 1 yang muncul, izinkan unduhan ganda di browser.", "ok");
+  } catch (err) {
+    console.error(err); toast("Gagal membuat gambar: " + (err && err.message || "kesalahan tidak diketahui"), "err");
+  } finally {
+    EKSPOR = false; kecAktif = pilihan;
+    body.classList.remove("ekspor", "hal1", "hal2");
+    render(); paskanPeta(false); aturLabel(); window.scrollTo(0, posisi);
+    bt.disabled = false; bt.textContent = teks;
+  }
 }
 $("btJpg").addEventListener("click", unduhJPG);
 $("btCetak").addEventListener("click", () => window.print());
