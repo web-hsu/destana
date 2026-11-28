@@ -146,7 +146,7 @@ function pilihKecamatan(n) {
 // ================= RENDER =================
 function render() {
   renderKop(); renderBanner(); renderKPI(); renderIndikator(); renderOverlay(); renderPetaUpdate();
-  renderTabel(); renderTren(); renderDetail(); renderHujan(); renderDebit(); renderJam(); renderSumber();
+  renderTabel(); renderHujan(); renderDebit(); renderJam(); renderSumber();
 }
 
 function pesanData() {
@@ -231,7 +231,7 @@ function tabelHujanHariIni() {
     const d = ks[0].d;
     isi = !d || !d.n ? '<tr class="nol"><td>' + esc(kecAktif) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>'
       : d.list.map((x, i) => '<tr><td>' + (i ? "" : esc(kecAktif)) + '</td><td>' + x.j + '</td><td>' + fx(x.mm, 1) + ' mm</td></tr>').join("") +
-        '<tr class="tot"><td></td><td>Total ' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang hujan</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
+        '<tr class="tot"><td>Total</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">●</span>' : "") + '</td><td><b>' + fx(d.tot, 1) + '</b> mm <span class="kat k' + KAT_KELAS(d.tot) + '">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
   } else {
     isi = ks.map(x => {
       const d = x.d;
@@ -300,29 +300,6 @@ function renderTabel() {
 // ================= GRAFIK SVG =================
 const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
 const hariSingkat = d => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { weekday: "short" });
-
-function renderTren() {
-  const el = $("tren");
-  if (!REKAP || !REKAP.baris.length) { el.innerHTML = '<div class="kosong">' + (API_BANJIR ? "Belum ada rekap harian. Data terkumpul otomatis tiap 3 jam." : esc(pesanData())) + '</div>'; return; }
-  const hari = []; for (let o = 6; o >= 0; o--) hari.push(tglWITA(o));
-  const per = hari.map(t => { const h = [0, 0, 0, 0], rows = REKAP.baris.filter(r => r.t === t); rows.forEach(r => { if (LV[r.status] != null) h[LV[r.status]]++; }); return { t: t, h: h, n: rows.length }; });
-  const W = 520, H = 250, L = 28, R = 8, T = 24, B = 44, bw = (W - L - R) / 7, tinggi = H - T - B, mk = Math.max(KEC.length, 1);
-  let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Jumlah kecamatan per tingkat siaga, 7 hari terakhir">';
-  [0, .5, 1].forEach(f => { const y = T + tinggi * (1 - f); s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="#e1e8e6"/><text x="' + (L - 5) + '" y="' + (y + 4) + '" font-size="11" fill="#5d6f78" text-anchor="end">' + fmtN(mk * f, 0) + '</text>'; });
-  per.forEach((p, i) => {
-    const x = L + i * bw + bw * .2, w = bw * .6; let y = T + tinggi;
-    if (!p.n) s += '<rect x="' + x + '" y="' + (y - 3) + '" width="' + w + '" height="3" rx="1.5" fill="#dde4e2"/><text x="' + (x + w / 2) + '" y="' + (y - 8) + '" font-size="12" font-weight="700" fill="#8a9aa1" text-anchor="middle">–</text>';
-    else {
-      [0, 1, 2, 3].forEach(lv => { const hh = p.h[lv] / mk * tinggi; if (hh > 0) { y -= hh; s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" fill="' + WARNA_LV[lv] + '"/>'; } });
-      s += '<text x="' + (x + w / 2) + '" y="' + (y - 6) + '" font-size="12" font-weight="800" fill="#14232b" text-anchor="middle">' + (p.h[1] + p.h[2] + p.h[3]) + '</text>';
-    }
-    s += '<text x="' + (x + w / 2) + '" y="' + (H - 24) + '" font-size="11.5" font-weight="700" fill="#14232b" text-anchor="middle">' + esc(hariSingkat(p.t)) + '</text>' +
-         '<text x="' + (x + w / 2) + '" y="' + (H - 10) + '" font-size="11" fill="#5d6f78" text-anchor="middle">' + tglPendek(p.t) + '</text>';
-  });
-  s += '</svg><div class="gf-legenda">' + [0, 1, 2, 3].map(lv => '<span><i style="background:' + WARNA_LV[lv] + '"></i>' + NAMA_LV[lv] + '</span>').join("") + '</div>' +
-       '<p class="catatan-kecil">Angka di atas batang = jumlah kecamatan berstatus Waspada, Siaga, atau Awas pada hari itu (status tertinggi harian dari rekap spreadsheet).</p>';
-  el.innerHTML = s;
-}
 
 // batang: items [{d, v, k}] k = lalu | ini | depan
 function svgBatang(items, opsi) {
@@ -410,38 +387,6 @@ function renderDebit() {
 }
 
 // ================= DETAIL KECAMATAN =================
-function renderDetail() {
-  const el = $("detail");
-  if (!SNAP || !adaKec().length) { el.innerHTML = '<div class="kartu-kepala"><h2>Detail Kecamatan</h2></div><div class="kosong">' + esc(pesanData()) + '</div>'; return; }
-  const ks = adaKec(), top = ks.slice().sort((a, b) => C(b).skor.risiko - C(a).skor.risiko)[0];
-  const k = kecAktif || top, c = C(k), lv = LV[c.skor.status], i = KEC.indexOf(k), sk = c.skor, h = c.hujan, d = c.debit, a = c.ambang;
-  const fb = (lb, v, ket) => '<div class="fb"><span>' + lb + '</span><span class="t"><i style="width:' + (v == null ? 0 : v) + '%;background:' + warnaSkor(v) + '"></i></span><b>' + (v == null ? "—" : v) + '</b>' + (ket ? '<div class="fb-ket">' + ket + '</div>' : "") + '</div>';
-  const nv = (lb, v, s) => '<div class="nv"><div class="lb">' + lb + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>';
-  const sk5 = (nm, v, maksSkala) => { const p = v == null ? 0 : Math.min(1, v / maksSkala); return '<div class="kes-baris"><span>' + nm + '</span><span class="t"><i style="width:' + Math.round(p * 100) + '%;background:' + (p < .3 ? WARNA_LV[0] : p < .6 ? WARNA_LV[1] : p < .85 ? "#f08a00" : WARNA_LV[3]) + '"></i></span><span>' + (v == null ? "—" : fmtN(v, 1) + " mm") + '</span></div>'; };
-  el.innerHTML =
-    '<div class="detail-kepala"><h2>Detail Kecamatan</h2><select id="selKec" aria-label="Pilih kecamatan">' +
-      KEC.slice().sort((x, y) => x.localeCompare(y)).map(n => '<option' + (n === k ? " selected" : "") + (C(n) ? "" : " disabled") + '>' + esc(n) + '</option>').join("") + '</select>' +
-      (kecAktif ? "" : '<span class="petunjuk" style="font-size:12px;color:#5d6f78">menampilkan kecamatan dengan skor tertinggi</span>') +
-      '<span class="skor-besar"><span class="lencana lv' + lv + '">' + esc(sk.status) + '</span><b>' + sk.risiko + '</b><span style="color:#5d6f78">/ 100</span></span></div>' +
-    '<div class="detail-grid">' +
-      '<div><h3>Faktor risiko</h3>' +
-        fb("Tinggi muka air", sk.tma, sk.tma == null ? "belum ada pembacaan ≤ 48 jam, tidak dihitung" : "") +
-        fb("Curah hujan", sk.hujan, sk.hujan == null ? "tanpa data" : "") + fb("Debit sungai", sk.debit, sk.debit == null ? "tanpa data atau debit puncak terlalu kecil" : "") +
-        fb("Keterpaparan penduduk", sk.paparan, fmtN(c.kepadatan) + " jiwa/km² · " + fmtN(POP[i]) + " jiwa · " + DESA[i] + " desa/kelurahan") +
-        '<div class="nilai-grid">' +
-          nv("Tinggi muka air", c.tma ? fmtN(c.tma.cm) + " cm" : "—", c.tma ? esc(c.tma.status) + " · " + esc(c.tma.tren) + " · " + umurTeks(c.tma.umurJam) + (c.tma.valid ? "" : " (kedaluwarsa)") : "belum ada pembacaan") +
-          nv("Ambang (cm)", a.waspada + " / " + a.siaga + " / " + a.awas, "Waspada / Siaga / Awas · " + esc(a.pos)) +
-          nv("Hujan 3 hari ke depan", fx(h && h.h3, 1) + " mm", h ? "puncak harian " + fx(h.m1, 1) + " mm · 3 hari lalu " + fx(h.lalu3, 1) : "") +
-          nv("Debit sungai", fx(d && d.now, 1) + " m³/s", d ? "puncak " + fx(d.max7, 1) + (d.rasio != null ? " · " + fx(d.rasio, 2) + "× rata-rata" : "") : "") +
-        '</div></div>' +
-      '<div><h3>Hujan teramati dan prakiraan</h3>' + (h
-        ? '<div class="kes-besar"><b>' + fx(h.jam24, 1) + '</b><span style="color:#5d6f78">mm dalam 24 jam terakhir</span></div>' +
-          sk5("1 jam terakhir", h.jam1, 20) + sk5("24 jam terakhir", h.jam24, 120) + sk5("72 jam terakhir", h.jam72, 250) + sk5("Hari ini (BMKG/model)", h.ini, 100) + sk5("3 hari ke depan", h.h3, 250) + sk5("7 hari ke depan", h.h7, 400)
-        : '<div class="kosong">Data hujan belum tersedia.</div>') + '</div>' +
-      '<div><h3>Tindakan yang disarankan</h3><ul class="rekom-penuh">' + c.rekom.map((r, j) => '<li' + (j === 0 ? ' class="lv' + lv + '"' : "") + '>' + esc(r) + '</li>').join("") + '</ul></div>' +
-    '</div>';
-}
-
 // ================= SUMBER & KAKI =================
 function renderSumber() {
   $("sumber").innerHTML = '<b>Sumber data dan cara membaca</b>' +
@@ -503,7 +448,6 @@ document.addEventListener("click", e => {
   const cs = e.target.closest("[data-csv]"); if (cs) { unduhCSV(cs.dataset.csv); return; }
   const kc = e.target.closest("[data-kec]"); if (kc) { pilihKecamatan(kc.dataset.kec); return; }
 });
-document.addEventListener("change", e => { if (e.target.id === "selKec") { kecAktif = null; pilihKecamatan(e.target.value); } });
 document.addEventListener("submit", e => { const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault(); kirimForm(f); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") tutupModal(); });
 $("btSegarkan").addEventListener("click", () => { muatSnapshot(); muatRekap(); toast("Memuat ulang data…", "ok"); });
