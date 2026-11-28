@@ -114,7 +114,7 @@ function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setSt
 
 function opsiPandang() {
   const w = map.getSize().x, pad = w > 1000 ? 12 : 12;
-  return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 13, animate: false };
+  return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 14, animate: false };
 }
 function paskanPeta(animasi) {
   map.invalidateSize({ pan: false });
