@@ -341,18 +341,20 @@ function renderJam() {
   let seri;
   if (sel && sel.hujan && sel.hujan.jam) seri = sel.hujan.jam.slice();
   else { const n = Math.max.apply(null, ada.map(k => C(k).hujan.jam.length)); seri = []; for (let i = 0; i < n; i++) seri.push(rataA(ada.map(k => C(k).hujan.jam[i]))); }
-  const iIni = Math.min(23, seri.length - 1), W = 900, H = 118, L = 34, R = 6, T = 16, B = 24, tinggi = H - T - B, bw = (W - L - R) / seri.length;
+  const iIni = Math.min(23, seri.length - 1), W = 680, H = 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
   const mk = nice(Math.max(5, Math.max.apply(null, seri) * 1.1));
   const mulai = new Date((sel ? sel.hujan.jamMulai : ada[0] && C(ada[0]).hujan.jamMulai) + ":00Z").getTime();
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Hujan per jam, 24 jam terakhir dan 24 jam ke depan">';
-  [0, .5, 1].forEach(f => { const y = T + tinggi * (1 - f); s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="#e1e8e6"/><text x="' + (L - 5) + '" y="' + (y + 4) + '" font-size="11" fill="#5d6f78" text-anchor="end">' + fmtN(mk * f, mk < 10 ? 1 : 0) + '</text>'; });
+  [0, .5, 1].forEach(f => { const y = T + tinggi * (1 - f); s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="#d3dcda"/><text x="' + (L - 5) + '" y="' + (y + 4) + '" font-size="13" fill="#3d4f58" text-anchor="end">' + fmtN(mk * f, mk < 10 ? 1 : 0) + '</text>'; });
   seri.forEach((v, i) => {
     const h = (v || 0) / mk * tinggi, x = L + i * bw + 1, y = T + tinggi - h;
-    s += '<rect x="' + x + '" y="' + y + '" width="' + Math.max(bw - 2, 1) + '" height="' + Math.max(h, v > 0 ? 1 : 0) + '" fill="' + (i < iIni ? "#9fb3bd" : i === iIni ? "#0b4a6f" : "#3b8fc4") + '"/>';
-    if ((i % 3 === 0 && Math.abs(i - iIni) > 2) || i === iIni) { const jam = new Date(mulai + i * 36e5).toISOString().slice(11, 13); s += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" font-size="10.5" fill="#14232b" text-anchor="middle">' + jam + '.00</text>'; }
+    s += '<rect x="' + x + '" y="' + y + '" width="' + Math.max(bw - 2, 1) + '" height="' + Math.max(h, v > 0 ? 1 : 0) + '" fill="' + (i < iIni ? "#7f98a5" : i === iIni ? "#0b4a6f" : "#1f78b8") + '"/>';
+    if ((i % 6 === 0 && Math.abs(i - iIni) > 2) || i === iIni) { const jam = new Date(mulai + i * 36e5).toISOString().slice(11, 13); s += '<text x="' + (x + bw / 2) + '" y="' + (H - 7) + '" font-size="13" font-weight="600" fill="#14232b" text-anchor="middle">' + jam + '.00</text>'; }
   });
+  const iMx = seri.reduce((m, v, q) => (v || 0) > (seri[m] || 0) ? q : m, 0);
+  if ((seri[iMx] || 0) > 0) { const xm = Math.min(Math.max(L + iMx * bw + bw / 2, L + 14), W - 16), ym = T + tinggi - seri[iMx] / mk * tinggi - 4; s += '<text x="' + xm + '" y="' + Math.max(ym, T + 11) + '" font-size="13" font-weight="800" fill="#14232b" text-anchor="middle">' + fmtN(seri[iMx], 1) + '</text>'; }
   const xi = L + iIni * bw + bw / 2;
-  s += '<line x1="' + xi + '" x2="' + xi + '" y1="' + T + '" y2="' + (T + tinggi) + '" stroke="#f08a00" stroke-dasharray="4 3"/><text x="' + xi + '" y="' + (T - 4) + '" font-size="10.5" font-weight="700" fill="#f08a00" text-anchor="middle">sekarang</text></svg>';
+  s += '<line x1="' + xi + '" x2="' + xi + '" y1="' + T + '" y2="' + (T + tinggi) + '" stroke="#d97400" stroke-width="1.6" stroke-dasharray="4 3"/><text x="' + xi + '" y="' + (T - 6) + '" font-size="13" font-weight="800" fill="#d97400" text-anchor="middle">sekarang</text></svg>';
   const t24 = seri.slice(0, iIni + 1).reduce((a, b) => a + (b || 0), 0), d24 = seri.slice(iIni + 1).reduce((a, b) => a + (b || 0), 0);
   el.innerHTML = judul + s + '<div class="jam-kaki"><span><i style="background:#9fb3bd"></i>24 jam terakhir: ' + fmtN(t24, 1) + ' mm</span><span><i style="background:#3b8fc4"></i>24 jam ke depan: ' + fmtN(d24, 1) + ' mm</span><span class="jam-cat">Estimasi model Open-Meteo, bukan alat penakar hujan</span></div>';
 }
