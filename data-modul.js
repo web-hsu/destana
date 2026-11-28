@@ -1,6 +1,6 @@
 // DESTANA — konfigurasi dan lapisan data (memuat data dari Apps Script, mengirim formulir petugas).
 // Hanya dua baris di bawah ini yang perlu diisi setelah Kode.gs dideploy.
-const API_BANJIR = "";          // URL Web App (…/exec)
+const API_BANJIR = "https://script.google.com/macros/s/AKfycbwundjXJBo5urMq_jxkmJrWdmt638EQvuLK5BRO-Fz3EeCE-UL4lPjC8wcpa0fz9vyg/exec";          // URL Web App (…/exec)
 const SPREADSHEET_URL = "";     // opsional: tautan spreadsheet laporan (tombol "Spreadsheet")
 
 // Logo di kop halaman (opsional). Contoh: [{ src: "logo/pemkab-hsu.png", alt: "Pemkab HSU" }]
