@@ -82,7 +82,7 @@ button{font-family:inherit}
 /* ================= PETA ================= */
 .peta-kartu{padding:16px 18px 18px}
 .peta-badan{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--garis)}
-#map{height:800px;background:#dfe7e5}
+#map{height:640px;background:#dfe7e5}
 .leaflet-container{font-family:var(--font)}
 .ov{position:absolute;z-index:500;top:12px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .ov-kiri{left:12px;width:340px}
@@ -105,7 +105,8 @@ button{font-family:inherit}
 .hj-tbl tr.nol td{color:var(--muted);font-weight:400}
 .hj-tbl tr.nol td:first-child{font-weight:700;color:inherit}
 .hj-tbl small{display:block;color:var(--muted);font-size:10.5px;font-weight:400}
-.hj-tbl .sdg{color:#0b6fb5;font-weight:700}
+.hj-tbl .kat{color:var(--muted);font-size:10.5px}
+.hj-tbl .sdg{font-size:10.5px;color:#0b6fb5;font-weight:700}
 .hj-tbl tr.tot td{font-weight:700;border-top:2px solid var(--garis)}
 .hj-cat{font-size:11px;color:var(--muted);margin-top:5px}
 .rekom-daftar{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;font-size:12.5px;max-height:190px;overflow:auto}

@@ -220,11 +220,11 @@ function tabelHujanHariIni() {
       const d = x.d;
       if (!d) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Data belum tersedia</td></tr>';
       if (!d.n) return '<tr class="nol"><td>' + esc(x.k) + '</td><td colspan="2">Belum ada hujan hari ini</td></tr>';
-      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam<small>sejak ' + d.awal + '</small>' + (d.sedang ? '<small class="sdg">● sedang hujan</small>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm<small>' + KATEGORI_HARIAN(d.tot) + '</small></td></tr>';
+      return '<tr><td>' + esc(x.k) + '</td><td>' + d.n + ' jam' + (d.sedang ? ' <span class="sdg">● sedang</span>' : "") + '</td><td>' + fx(d.tot, 1) + ' mm <span class="kat">' + KATEGORI_HARIAN(d.tot) + '</span></td></tr>';
     }).join("");
   }
   return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>' + (kecAktif ? "Jam" : "Lama hujan") + '</th><th>Curah hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
-    '<div class="hj-cat">Pukul 00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan = ≥ 0,1 mm/jam. Estimasi model, bukan alat penakar. Klik kecamatan untuk rincian per jam.</div>';
+    '<div class="hj-cat">00.00 s.d. jam ini (WITA), pembaruan ' + esc(SNAP.diperbarui.slice(11, 16).replace(":", ".")) + '. Jam hujan = ≥ 0,1 mm. Estimasi model. Klik kecamatan untuk rincian.</div>';
 }
 
 // ----- kartu di atas peta -----
