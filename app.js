@@ -26,7 +26,7 @@ const adaKec = () => KEC.filter(k => C(k));
 
 // ================= PETA =================
 const map = L.map("map", { zoomControl: false, preferCanvas: true, zoomSnap: 0.25, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
-L.control.zoom({ position: "bottomleft" }).addTo(map);
+L.control.zoom({ position: "topright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
@@ -113,8 +113,8 @@ function gayaKec(n) {
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
 function opsiPandang() {
-  const w = map.getSize().x, pad = w > 1000 ? 380 : 12;
-  return { paddingTopLeft: [pad, 14], paddingBottomRight: [pad, 14], maxZoom: 13, animate: false };
+  const w = map.getSize().x, pad = w > 1000 ? 12 : 12;
+  return { paddingTopLeft: [w > 1000 ? 410 : 12, 14], paddingBottomRight: [12, 14], maxZoom: 13, animate: false };
 }
 function paskanPeta(animasi) {
   map.invalidateSize({ pan: false });
@@ -242,13 +242,6 @@ function renderOverlay() {
 
   // --- prakiraan hujan per kecamatan (BMKG): kecamatan, jam, jenis hujan ---
   $("ovRekom").innerHTML = '<div class="ov-judul">Prakiraan Hujan per Kecamatan<small>BMKG · 24 jam ke depan</small></div><div class="ov-isi">' + tabelHujanBMKG() + '</div>';
-
-  // --- teratas ---
-  const top = ks.slice().sort((a, b) => C(b).skor.risiko - C(a).skor.risiko).slice(0, 5);
-  $("ovTeratas").innerHTML = '<div class="ov-judul">Skor Risiko Tertinggi<small>0–100</small></div><div class="ov-isi">' +
-    (top.length ? top.map((k, i) => '<div class="top-baris" data-kec="' + esc(k) + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + esc(k) + '</span>' +
-      '<span class="bar"><i style="width:' + C(k).skor.risiko + '%;background:' + WARNA_LV[LV[C(k).skor.status]] + '"></i></span><span class="sk">' + C(k).skor.risiko + '</span></div>').join("")
-      : '<span style="color:#5d6f78">Data belum tersedia.</span>') + '</div>';
 }
 
 function renderPetaUpdate() {
