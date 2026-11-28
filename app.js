@@ -15,7 +15,7 @@ const IKON_TETES = '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.2 6 7.4 6 10
 
 let kecAktif = null;      // kecamatan yang dipilih (null = ringkasan kabupaten)
 let EKSPOR = false;       // true saat membuat gambar JPG (tata letak khusus 2 halaman)
-const HAL_L = 900, HAL_T = [1500, 1273];   // lebar dan tinggi gambar 1 dan 2 (samakan dengan style.css); disimpan 2x lebih tajam
+const HAL = [{ l: 1180 }, { l: 900, t: 1273 }];   // ukuran gambar 1 dan 2 (lebar samakan dengan style.css); tinggi gambar 1 mengikuti isi
 
 function toast(teks, jenis) {
   const el = $("toast"); el.textContent = teks;
@@ -115,7 +115,6 @@ function gayaKec(n) {
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
 function opsiPandang() {
-  if (EKSPOR) return { paddingTopLeft: [362, 62], paddingBottomRight: [14, 212], maxZoom: 14, animate: false };
   const w = map.getSize().x;
   return { paddingTopLeft: [w > 1000 ? 375 : 12, 10], paddingBottomRight: [w > 1000 ? 175 : 12, w > 1000 ? 200 : 14], maxZoom: 14, animate: false };
 }
@@ -307,7 +306,7 @@ const hariSingkat = d => new Date(d + "T00:00:00").toLocaleDateString("id-ID", {
 
 // batang: items [{d, v, k}] k = lalu | ini | depan
 function svgBatang(items, opsi) {
-  const W = EKSPOR ? 405 : 560, H = EKSPOR ? 190 : 240, L = 40, R = 8, T = EKSPOR ? 18 : 24, B = 42, n = items.length, tinggi = H - T - B;
+  const W = 560, H = 240, L = 40, R = 8, T = 24, B = 42, n = items.length, tinggi = H - T - B;
   const mk = nice(Math.max(opsi.min || 1, Math.max.apply(null, items.map(i => i.v)) * 1.08));
   const bw = (W - L - R) / n, warna = { lalu: "#9fb3bd", ini: "#0b4a6f", depan: "#3b8fc4" };
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opsi.label) + '">';
@@ -346,7 +345,7 @@ function renderJam() {
   let seri;
   if (sel && sel.hujan && sel.hujan.jam) seri = sel.hujan.jam.slice();
   else { const n = Math.max.apply(null, ada.map(k => C(k).hujan.jam.length)); seri = []; for (let i = 0; i < n; i++) seri.push(rataA(ada.map(k => C(k).hujan.jam[i]))); }
-  const iIni = Math.min(23, seri.length - 1), W = EKSPOR ? 470 : 820, H = EKSPOR ? 142 : 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
+  const iIni = Math.min(23, seri.length - 1), W = 820, H = 168, L = 32, R = 6, T = 22, B = 26, tinggi = H - T - B, bw = (W - L - R) / seri.length;
   const mk = nice(Math.max(5, Math.max.apply(null, seri) * 1.1));
   const mulai = new Date((sel ? sel.hujan.jamMulai : ada[0] && C(ada[0]).hujan.jamMulai) + ":00Z").getTime();
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Hujan per jam, 24 jam terakhir dan 24 jam ke depan">';
@@ -371,7 +370,7 @@ function renderDebit() {
   const judul = '<div class="kartu-kepala"><h2>Debit Sungai</h2><span class="petunjuk">' + (kd ? esc(kd) + (kecAktif ? "" : " (debit puncak tertinggi)") : "") + " · m³/s</span></div>";
   if (!SNAP || !kd) { el.innerHTML = judul + '<div class="kosong">' + esc(SNAP ? "Data debit belum tersedia." : pesanData()) + '</div>'; return; }
   const d = C(kd).debit, hariIni = tglWITA(0), seri = d.seri;
-  const W = EKSPOR ? 405 : 560, H = EKSPOR ? 190 : 240, L = 44, R = 12, T = 26, B = 42, tinggi = H - T - B, mk = nice(Math.max(1, d.max7, Math.max.apply(null, seri.map(x => x.q))) * 1.1), n = seri.length;
+  const W = 560, H = 240, L = 44, R = 12, T = 26, B = 42, tinggi = H - T - B, mk = nice(Math.max(1, d.max7, Math.max.apply(null, seri.map(x => x.q))) * 1.1), n = seri.length;
   const X = i => L + (W - L - R) * (n === 1 ? .5 : i / (n - 1)), Y = v => T + tinggi * (1 - v / mk);
   const pts = seri.map((x, i) => X(i) + "," + Y(x.q)).join(" ");
   let s = '<svg class="gf" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Debit sungai harian">';
@@ -461,9 +460,10 @@ async function tungguPeta(maksMs) {
   while (ubin.isLoading() && Date.now() - mulai < maksMs) await jeda(150);
   await jeda(500);
 }
-function fotoHalaman(tinggi) {
+function fotoHalaman(ukuran) {
+  const tinggi = ukuran.t || Math.ceil(document.body.getBoundingClientRect().height);
   return html2canvas(document.body, {
-    scale: 2, width: HAL_L, height: tinggi, windowWidth: 1280, windowHeight: tinggi,
+    scale: 2, width: ukuran.l, height: tinggi, windowWidth: 1280, windowHeight: tinggi,
     useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0,
     onclone: doc => doc.querySelectorAll(".bar-aksi,.leaflet-control-zoom,#toast,#modal").forEach(e => { e.style.display = "none"; })
   }).then(cv => new Promise((ok, gagal) => cv.toBlob(b => b ? ok(b) : gagal(new Error("gambar kosong")), "image/jpeg", 0.92)));
@@ -489,11 +489,11 @@ async function unduhJPG() {
     await tungguPeta(8000);
     paskanPeta(false); aturLabel();
     await jeda(300);
-    const gambar1 = await fotoHalaman(HAL_T[0]);
+    const gambar1 = await fotoHalaman(HAL[0]);
     body.classList.replace("hal1", "hal2");
     render();                                  // data bisa diperbarui saat menunggu
     await jeda(300);
-    const gambar2 = await fotoHalaman(HAL_T[1]);
+    const gambar2 = await fotoHalaman(HAL[1]);
     const w = new Date(), p2 = n => String(n).padStart(2, "0");
     const nama = "DESTANA-HSU-" + tglWITA(0) + "-" + p2(w.getHours()) + p2(w.getMinutes());
     simpanBerkas(gambar1, nama + "-1.jpg");
