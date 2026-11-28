@@ -363,3 +363,31 @@ body.ekspor.hal2 .kaki-sumber b{font-size:11.5px}
 body.ekspor.hal2 .kaki-buka{font-size:11.5px;text-align:right}
 body.ekspor.hal2 .kaki{flex:none;margin:0}
 body.ekspor #statusPeta{display:none}
+
+/* ===== kartu melayang di atas peta: latar berwarna + tulisan lebih tegas ===== */
+.ov-kartu,.ov-jam{--muted:#2b4350;background:#e3eff8;border:1px solid #9dbad0;box-shadow:0 3px 12px rgba(16,32,31,.28)}
+.ov-judul{background:#c4dbed;border-bottom:1px solid #9dbad0;color:#0a3550;font-size:14px;font-weight:800}
+.ov-judul small{color:#2b4350;font-weight:600;font-size:12px}
+.cuaca-atas .kond{border-left-color:#8fb0c8;color:#10222b}
+.cuaca-atas .kond small{font-size:12.5px;font-weight:600}
+.cuaca-baris{font-size:12.5px;font-weight:500}
+.cuaca-baris b{font-size:15px;color:#10222b}
+.hj-tbl{font-size:12.5px;color:#10222b}
+.hj-tbl th{background:#d3e4f1;color:#1f3a48;font-size:11px;border-bottom:1px solid #9dbad0}
+.hj-tbl td{border-bottom:1px solid #bcd1e0;color:#10222b}
+.hj-tbl td:first-child{font-weight:800}
+.hj-cat{font-size:11.5px;color:#2b4350;font-weight:500;line-height:1.4}
+.jam-kepala{font-size:14.5px}
+.jam-kepala b{color:#0a3550;font-weight:800}
+.jam-kepala span{font-size:13px;font-weight:600;color:#2b4350}
+.jam-kaki{font-size:12.5px;font-weight:600;color:#1f3a48}
+.rekom-daftar{color:#10222b}
+
+/* ===== kartu indikator: ikon berwarna ===== */
+.ind{display:flex;align-items:flex-start;gap:12px;position:relative;overflow:hidden;transition:box-shadow .15s,transform .15s}
+.ind::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--wr)}
+.ind:hover{box-shadow:0 4px 14px rgba(16,32,31,.12);transform:translateY(-1px)}
+.ind-ikon{flex:none;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--wb);color:var(--wr)}
+.ind-isi{min-width:0;flex:1}
+.ind.w1{--wr:#1e88d6;--wb:#e1effb} .ind.w2{--wr:#1565a8;--wb:#dce9f6} .ind.w3{--wr:#0f8b8d;--wb:#ddf2f2} .ind.w4{--wr:#e08a00;--wb:#fdeed6} .ind.w5{--wr:#7b4bb5;--wb:#eee5f8}
+@media (max-width:1100px){.ind-ikon{width:36px;height:36px;border-radius:10px}.ind-ikon svg{width:19px;height:19px}.ind{gap:9px}}

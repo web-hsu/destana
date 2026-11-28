@@ -293,14 +293,22 @@ function renderIndikator() {
   const j1 = maks(c => c.hujan && c.hujan.jam1), j24 = maks(c => c.hujan && c.hujan.jam24), h3 = maks(c => c.hujan && c.hujan.h3);
   const tma = maks(c => c.tma && c.tma.valid ? c.tma.cm : null), deb = maks(c => c.debit && c.debit.max7);
   const kd = deb ? C(deb.k).debit : null;
-  const kartu = (lb, nilai, sat, sm) => '<div class="ind"><div class="lb">' + lb + '</div><div class="nilai">' + nilai + (sat ? "<small>" + sat + "</small>" : "") + '</div><div class="sm">' + sm + '</div></div>';
+  const svg = d => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const IKON = {
+    jam: svg('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>'),
+    hujan: svg('<path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="17"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="16" y1="13" x2="16" y2="15"/><line x1="16" y1="19" x2="16" y2="21"/>'),
+    kalender: svg('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 15h.01M12 15h.01M16 15h.01"/>'),
+    debit: svg('<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>'),
+    tma: svg('<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/><path d="M9 15.5c.9.6 1.6.6 3 0s2.1-.6 3 0"/>')
+  };
+  const kartu = (lb, nilai, sat, sm, ikon, warna) => '<div class="ind ' + warna + '"><div class="ind-ikon">' + IKON[ikon] + '</div><div class="ind-isi"><div class="lb">' + lb + '</div><div class="nilai">' + nilai + (sat ? "<small>" + sat + "</small>" : "") + '</div><div class="sm">' + sm + '</div></div></div>';
   const tertinggi = (m, sat) => m ? "rata-rata · tertinggi " + esc(m.k) + " " + fx(m.v, 1) + " " + sat : "rata-rata kabupaten";
   $("indikator").innerHTML =
-    kartu("Hujan 1 jam terakhir", fx(rata(c => c.hujan && c.hujan.jam1), 1), "mm", tertinggi(j1, "mm")) +
-    kartu("Hujan 24 jam terakhir", fx(rata(c => c.hujan && c.hujan.jam24), 1), "mm", tertinggi(j24, "mm")) +
-    kartu("Hujan 3 hari ke depan", fx(rata(c => c.hujan && c.hujan.h3), 1), "mm", tertinggi(h3, "mm")) +
-    kartu("Debit puncak 7 hari", deb ? fx(deb.v, 1) : "—", deb ? "m³/s" : "", deb ? esc(deb.k) + " · " + (kd && kd.rasio != null ? fx(kd.rasio, 2) + "× rata-rata" : "model GloFAS") : "menunggu data") +
-    kartu("Tinggi muka air", tma ? fx(tma.v, 0) : "—", tma ? "cm" : "", tma ? "tertinggi · " + esc(tma.k) : (SNAP ? "belum diinput (opsional)" : "menunggu data"));
+    kartu("Hujan 1 jam terakhir", fx(rata(c => c.hujan && c.hujan.jam1), 1), "mm", tertinggi(j1, "mm"), "jam", "w1") +
+    kartu("Hujan 24 jam terakhir", fx(rata(c => c.hujan && c.hujan.jam24), 1), "mm", tertinggi(j24, "mm"), "hujan", "w2") +
+    kartu("Hujan 3 hari ke depan", fx(rata(c => c.hujan && c.hujan.h3), 1), "mm", tertinggi(h3, "mm"), "kalender", "w3") +
+    kartu("Debit puncak 7 hari", deb ? fx(deb.v, 1) : "—", deb ? "m³/s" : "", deb ? esc(deb.k) + " · " + (kd && kd.rasio != null ? fx(kd.rasio, 2) + "× rata-rata" : "model GloFAS") : "menunggu data", "debit", "w4") +
+    kartu("Tinggi muka air", tma ? fx(tma.v, 0) : "—", tma ? "cm" : "", tma ? "tertinggi · " + esc(tma.k) : (SNAP ? "belum diinput (opsional)" : "menunggu data"), "tma", "w5");
 }
 
 // ----- hujan hari ini (sudah dan sedang terjadi) per kecamatan -----
