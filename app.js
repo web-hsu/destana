@@ -25,7 +25,7 @@ const C = k => (SNAP && SNAP.kec) ? SNAP.kec[k] || null : null;
 const adaKec = () => KEC.filter(k => C(k));
 
 // ================= PETA =================
-const map = L.map("map", { zoomControl: false, preferCanvas: true, zoomSnap: 0.25, zoomDelta: 0.5, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
+const map = L.map("map", { attributionControl: false, zoomControl: false, preferCanvas: true, zoomSnap: 0.25, zoomDelta: 0.5, scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([-2.42, 115.2], 10);
 L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
@@ -510,6 +510,8 @@ $("btSegarkan").addEventListener("click", () => { muatSnapshot(); muatRekap(); t
 $("btCetak").addEventListener("click", () => window.print());
 window.addEventListener("beforeprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
 window.addEventListener("afterprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
+// tinggi peta mengikuti tinggi kartu kiri; sesuaikan ulang bila tinggi berubah
+if (window.ResizeObserver) { let _ro; new ResizeObserver(() => { clearTimeout(_ro); _ro = setTimeout(() => { paskanPeta(false); aturLabel(); }, 150); }).observe(document.querySelector(".peta-badan")); }
 let _rs; window.addEventListener("resize", () => { clearTimeout(_rs); _rs = setTimeout(() => { paskanPeta(false); aturLabel(); }, 200); });
 
 // ================= MULAI =================
