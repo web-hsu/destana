@@ -493,13 +493,13 @@ function renderDebit() {
   s += '<text x="' + X(iMk) + '" y="' + (Y(seri[iMk].q) - 9) + '" font-size="11.5" font-weight="800" fill="#d92d27" text-anchor="middle">' + fmtN(seri[iMk].q, 1) + '</text></svg>';
   el.innerHTML = judul + s +
     '<p class="catatan-kecil">Sekarang ' + fx(d.now, 1) + " m³/s; rata-rata 7 hari terakhir " + fx(d.base, 1) + "; puncak " + fx(d.max7, 1) + " m³/s" + (d.tglMax ? " pada " + tglPendek(d.tglMax) : "") +
-    (d.rasio != null ? " (" + fx(d.rasio, 2) + "× rata-rata)" : "") + ". Debit adalah hasil simulasi model GloFAS (±5 km), bukan pengukuran alat di lapangan.</p>";
+    (d.rasio != null ? " (" + fx(d.rasio, 2) + "× rata-rata)" : "") + ". Debit adalah hasil simulasi GloFAS, bukan pengukuran alat di lapangan.</p>";
 }
 
 // ================= DETAIL KECAMATAN =================
 // ================= SUMBER & KAKI =================
 function renderSumber() {
-  $("sumber").innerHTML = '<b>Sumber data dan cara membaca</b>' +
+  $("sumber").innerHTML =
     '<p><b style="display:inline">Sumber:</b> prakiraan cuaca BMKG (semua kecamatan); curah hujan terkini, 24/72 jam terakhir, dan prakiraan dari Open-Meteo; debit sungai GloFAS (model); tinggi muka air (opsional) diinput petugas. Semua data direkam tiap jam di Google Sheet DESTANA sebagai riwayat.</p>' +
     '<p>Aplikasi ini alat bantu pemantauan, bukan pengganti peringatan resmi BPBD, BMKG, dan BWS.</p>';
   $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "") + " · v36";
@@ -627,7 +627,8 @@ if (window.ResizeObserver) { let _ro; new ResizeObserver(() => { clearTimeout(_r
 let _rs; window.addEventListener("resize", () => { clearTimeout(_rs); _rs = setTimeout(() => { paskanPeta(false); aturLabel(); }, 200); });
 
 // ================= MULAI =================
-function logo(el, daftar) { el.innerHTML = (daftar || []).map(l => '<img src="' + esc(l.src) + '" alt="' + esc(l.alt || "") + '">').join(""); }
+function logo(el, daftar) { if (!daftar || !daftar.length) return;   // logo bawaan ada di index.html; daftar kosong tidak menghapusnya
+  el.innerHTML = daftar.map(l => '<img src="' + esc(l.src) + '" alt="' + esc(l.alt || "") + '">').join(""); }
 function tampilGalat(pesan) {
   const el = document.getElementById("banner");
   if (el) { el.className = "banner lv3"; el.innerHTML = '<span class="chip">GALAT</span><div><b>Tampilan gagal dimuat penuh</b><span class="k">' + esc(pesan) + '</span></div><div class="ket">Tekan Ctrl+F5 untuk memuat ulang tanpa cache. Bila tetap muncul, pastikan semua berkas (index.html, style.css, app.js, data-modul.js, batas-wilayah.js) sudah versi terbaru dan kirimkan pesan ini.</div>'; }
