@@ -113,7 +113,7 @@ function gayaKec(n) {
 function warnaiPeta() { Object.keys(poligonKec).forEach(n => poligonKec[n].setStyle(gayaKec(n))); if (kecAktif) poligonKec[kecAktif].bringToFront(); }
 
 function opsiPandang() {
-  const w = map.getSize().x, pad = w > 1000 ? 340 : 12;
+  const w = map.getSize().x, pad = w > 1000 ? 380 : 12;
   return { paddingTopLeft: [pad, 14], paddingBottomRight: [pad, 14], maxZoom: 13, animate: false };
 }
 function paskanPeta(animasi) {
@@ -209,11 +209,14 @@ function tabelHujanBMKG() {
     if (!b.hj.length) return '<tr class="nol"><td>' + esc(b.k) + '</td><td colspan="2">Tidak ada hujan diprakirakan</td></tr>';
     if (kecAktif) return b.hj.map((x, i) => '<tr><td>' + (i ? "" : esc(b.k)) + '</td><td>' + labelHari(x.w) + " " + jam(x.w) + '</td><td>' + esc(x.c) + '</td></tr>').join("");
     const hari = {}; b.hj.forEach(x => (hari[labelHari(x.w)] = hari[labelHari(x.w)] || []).push(jam(x.w)));
+    const nh = Object.keys(hari);
+    const jamTeks = nh.map(h => (nh.length > 1 || h !== "Hari ini" ? "<b>" + esc(h) + "</b> " : "") + hari[h].join(", ")).join(" · ");
     const jenis = []; b.hj.forEach(x => { if (jenis.indexOf(x.c) < 0) jenis.push(x.c); });
     jenis.sort((p, q) => BOBOT_HUJAN(q) - BOBOT_HUJAN(p));
-    return '<tr><td>' + esc(b.k) + '</td><td>' + Object.keys(hari).map(h => '<b>' + esc(h) + '</b> ' + hari[h].join(", ")).join("<br>") + '</td><td>' + jenis.map(esc).join("<br>") + '</td></tr>';
+    const jenisTeks = jenis.map((x, n) => esc(n ? x.replace(/^Hujan\s*/i, "") : x)).join(", ");
+    return '<tr><td>' + esc(b.k) + '</td><td>' + jamTeks + '</td><td>' + jenisTeks + '</td></tr>';
   }).join("");
-  return '<div class="hj-bungkus"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>Jam prakiraan hujan</th><th>Jenis hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
+  return '<div class="hj-bungkus' + (kecAktif ? ' gulir' : '') + '"><table class="hj-tbl"><thead><tr><th>Kecamatan</th><th>Jam prakiraan hujan</th><th>Jenis hujan</th></tr></thead><tbody>' + isi + '</tbody></table></div>' +
     '<div class="hj-cat">Jam WITA, interval 3 jam. Klik kecamatan untuk rincian.</div>';
 }
 
@@ -238,7 +241,7 @@ function renderOverlay() {
   $("ovCuaca").innerHTML = '<div class="ov-judul">Cuaca · ' + (kecAktif ? esc(kecAktif) : "Kabupaten HSU") + '<small>BMKG</small></div>' + cuaca;
 
   // --- prakiraan hujan per kecamatan (BMKG): kecamatan, jam, jenis hujan ---
-  $("ovRekom").innerHTML = '<div class="ov-judul">Prakiraan Hujan per Kecamatan<small>BMKG · 48 jam</small></div><div class="ov-isi">' + tabelHujanBMKG() + '</div>';
+  $("ovRekom").innerHTML = '<div class="ov-judul">Prakiraan Hujan per Kecamatan<small>BMKG · 24 jam ke depan</small></div><div class="ov-isi">' + tabelHujanBMKG() + '</div>';
 
   // --- teratas ---
   const top = ks.slice().sort((a, b) => C(b).skor.risiko - C(a).skor.risiko).slice(0, 5);
