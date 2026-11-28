@@ -29,7 +29,7 @@ const map = L.map("map", { attributionControl: false, zoomControl: false, prefer
 L.control.zoom({ position: "bottomright" }).addTo(map);
 map.on("click", () => map.scrollWheelZoom.enable());
 map.on("mouseout", () => map.scrollWheelZoom.disable());
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19, crossOrigin: true }).addTo(map);
 
 const cincin = f => f.geometry.coordinates.map(c => [c[1], c[0]]);
 const fitur = lv => BATAS_HSU_GEOJSON.features.filter(f => f.properties && f.properties.level === lv);
@@ -450,7 +450,36 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("submit", e => { const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault(); kirimForm(f); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") tutupModal(); });
-$("btSegarkan").addEventListener("click", () => { muatSnapshot(); muatRekap(); toast("Memuat ulang data…", "ok"); });
+// ----- unduh tampilan sebagai gambar JPG (untuk dibagikan ke status WhatsApp) -----
+function unduhJPG() {
+  const bt = $("btJpg");
+  if (typeof html2canvas === "undefined") { toast("Pustaka gambar belum termuat. Periksa koneksi internet lalu muat ulang halaman.", "err"); return; }
+  if (!SNAP) { toast("Data belum dimuat, tunggu sebentar", "err"); return; }
+  const teks = bt.textContent; bt.disabled = true; bt.textContent = "Memproses…";
+  tutupModal(); $("dibuka").textContent = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" }).replace(",", "");
+  paskanPeta(false); window.scrollTo(0, 0);
+  const selesai = () => { bt.disabled = false; bt.textContent = teks; };
+  setTimeout(() => {
+    html2canvas(document.body, {
+      scale: Math.min(2, Math.max(1, 2400 / Math.max(document.documentElement.clientWidth, 1))),
+      useCORS: true, backgroundColor: "#eef2f1", logging: false, scrollX: 0, scrollY: 0,
+      windowWidth: document.documentElement.clientWidth,
+      onclone: doc => doc.querySelectorAll(".bar-aksi,.leaflet-control-zoom,#toast,#modal").forEach(e => { e.style.display = "none"; })
+    }).then(cv => {
+      cv.toBlob(blob => {
+        selesai();
+        if (!blob) { toast("Gagal membuat gambar", "err"); return; }
+        const w = new Date(), p2 = n => String(n).padStart(2, "0");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "DESTANA-HSU-" + tglWITA(0) + "-" + p2(w.getHours()) + p2(w.getMinutes()) + ".jpg";
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast("Gambar JPG tersimpan", "ok");
+      }, "image/jpeg", 0.92);
+    }).catch(err => { console.error(err); selesai(); toast("Gagal membuat gambar: " + (err && err.message || "kesalahan tidak diketahui"), "err"); });
+  }, 500);
+}
+$("btJpg").addEventListener("click", unduhJPG);
 $("btCetak").addEventListener("click", () => window.print());
 window.addEventListener("beforeprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
 window.addEventListener("afterprint", () => { map.invalidateSize({ pan: false }); paskanPeta(false); });
