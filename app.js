@@ -402,7 +402,7 @@ function renderTabel() {
       '<td><span class="lencana lv' + lv + '">' + esc(c.skor.status) + '</span></td></tr>';
   }).join("");
   const r = SNAP.ringkas, mx = f => { const v = ks.map(k => f(C(k))).filter(x => x != null && !isNaN(x)); return v.length ? Math.max.apply(null, v) : null; };
-  el.innerHTML = '<table class="tb"><thead><tr><th class="t">Kecamatan</th><th class="t">Cuaca (BMKG)</th><th>Hujan 1 jam</th><th>Hujan 24 jam</th><th>Hujan 3 hari</th><th>Debit</th><th>TMA</th><th>Skor</th><th>Status</th></tr></thead><tbody>' + baris +
+  el.innerHTML = '<table class="tb"><thead><tr><th class="t">Kecamatan</th><th class="t">Cuaca (BMKG)</th><th>Hujan 1 jam</th><th>Hujan 24 jam</th><th>Hujan 3 hari ke depan</th><th>Debit</th><th>TMA</th><th>Skor</th><th>Status</th></tr></thead><tbody>' + baris +
     '</tbody><tfoot><tr><td>Kabupaten</td><td class="t"></td><td>' + fx(rataA(ks.map(k => C(k).hujan && C(k).hujan.jam1)), 1) + '</td><td>' + fx(rataA(ks.map(k => C(k).hujan && C(k).hujan.jam24)), 1) + '</td><td>' + fx(rataA(ks.map(k => C(k).hujan && C(k).hujan.h3)), 1) + '</td>' +
     '<td>' + fx(mx(c => c.debit && c.debit.now), 1) + '</td><td>' + fx(mx(c => c.tma && c.tma.valid ? c.tma.cm : null), 0) + '</td><td>' + r.rataSkor + '</td><td><span class="lencana lv' + LV[r.tertinggi] + '">' + esc(r.tertinggi) + '</span></td></tr></tfoot></table>' +
     '<p class="sm-muted" style="margin:8px 2px 0">Satuan: hujan mm, debit m³/s, TMA cm (TMA opsional, diinput petugas). Baris Kabupaten: rata-rata untuk hujan dan skor, nilai tertinggi untuk debit dan TMA. Urut dari skor risiko tertinggi.</p>';
