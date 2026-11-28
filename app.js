@@ -218,7 +218,7 @@ function paskanPeta(animasi) {
   try {
     // cari zoom terbesar (kelipatan 0,25) yang masih memuat seluruh wilayah di area yang tidak tertutup kartu
     const sz = map.getSize(), pl = o.paddingTopLeft, pr = o.paddingBottomRight;
-    const perbesar = kecAktif ? 1 : 1.3;   // tampilan seluruh kabupaten diperbesar sedikit agar tidak bertumpuk
+    const perbesar = kecAktif ? 1 : 1.1;   // tampilan seluruh kabupaten diperbesar sedikit agar tidak bertumpuk
     const aw = (sz.x - pl[0] - pr[0]) * perbesar, ah = (sz.y - pl[1] - pr[1]) * perbesar;
     if (aw < 100 * perbesar || ah < 100 * perbesar) throw new Error("area kecil");
     let z = 8;
